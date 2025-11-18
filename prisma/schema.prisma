@@ -356,3 +356,21 @@ model DatabasePreset {
 
   @@map("database_presets")
 }
+
+// System Configuration - Store API keys and settings securely
+model SystemConfig {
+  id              String   @id @default(cuid())
+  key             String   @unique
+  value           String   @db.Text  // Encrypted value
+  category        String   // ai, integration, email, storage, etc.
+  description     String?
+  isEncrypted     Boolean  @default(true)
+  isRequired      Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category])
+  @@index([key])
+  @@map("system_configs")
+}

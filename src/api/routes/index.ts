@@ -9,10 +9,12 @@ import graphqlGeneratorRouter from './graphql-generator.routes';
 import mobileAppGeneratorRouter from './mobile-app-generator.routes';
 import deploymentRouter from './deployment.routes';
 import testingRouter from './testing.routes';
+import setupRouter from './setup.routes';
 
 const router = Router();
 
 // API routes
+router.use('/setup', setupRouter); // Setup wizard (no auth required)
 router.use('/projects', projectsRouter);
 router.use('/generations', generationsRouter);
 router.use('/templates', templatesRouter);
@@ -51,6 +53,7 @@ router.get('/', (_req, res) => {
       aiPoweredTesting: true,
     },
     endpoints: {
+      setup: '/api/setup',
       projects: '/api/projects',
       generations: '/api/generations',
       templates: '/api/templates',

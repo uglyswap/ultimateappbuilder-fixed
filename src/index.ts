@@ -76,6 +76,11 @@ async function initializeServices() {
   try {
     logger.info('🔧 Initializing services...');
 
+    // Initialize system configuration defaults
+    const { systemConfigService } = await import('@/services/system-config-service');
+    await systemConfigService.initializeDefaults();
+    logger.info('✅ System configuration initialized');
+
     // Initialize WebSocket server
     websocketService.initialize(server);
     logger.info('✅ WebSocket server initialized');

@@ -141,14 +141,41 @@ npm run dev
 - 📚 **Docs**: http://localhost:3000/api-docs
 - 🔌 **WebSocket**: ws://localhost:3000/ws
 
-### Docker Quick Start
+### 🐳 Docker Quick Start (EASIEST METHOD!)
 
 ```bash
-# Start everything with Docker Compose (PostgreSQL, Redis, App)
+# 1. Clone the repository
+git clone https://github.com/uglyswap/ultimateappbuilder.git
+cd ultimateappbuilder
+
+# 2. Start everything with Docker Compose
 docker-compose up
 
-# That's it! The app starts automatically with all dependencies
+# That's it! 🎉
 ```
+
+**What happens automatically:**
+- ✅ PostgreSQL database is created
+- ✅ Redis cache is started
+- ✅ Database migrations run automatically
+- ✅ Application starts on http://localhost:3000
+
+**First-time setup:**
+1. Open http://localhost:3000/api/setup/status to check setup status
+2. Configure your API keys via the Setup API:
+
+```bash
+curl -X POST http://localhost:3000/api/setup/complete \
+  -H "Content-Type: application/json" \
+  -d '{
+    "aiProvider": "anthropic",
+    "anthropicApiKey": "your-anthropic-key",
+    "openaiApiKey": "your-openai-key-optional",
+    "openrouterApiKey": "your-openrouter-key-optional"
+  }'
+```
+
+**No .env file editing required!** All configuration can be done via the API after startup.
 
 ## 📖 Usage
 

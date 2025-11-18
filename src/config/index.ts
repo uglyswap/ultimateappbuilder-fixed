@@ -104,12 +104,10 @@ export const config = {
   },
 } as const;
 
-// Validate required configuration
+// Validate required configuration (OPTIONAL MODE for easy deployment)
 export function validateConfig(): void {
   const required = {
     'Database URL': config.database.url,
-    'AI API Key': config.ai.apiKey,
-    'JWT Secret': config.auth.jwtSecret,
   };
 
   const missing = Object.entries(required)
@@ -119,7 +117,30 @@ export function validateConfig(): void {
   if (missing.length > 0) {
     throw new Error(
       `Missing required configuration: ${missing.join(', ')}\n` +
-      'Please check your .env file and ensure all required variables are set.'
+      'Please check your .env file and ensure DATABASE_URL is set.'
     );
   }
+
+  // Warn about missing optional configuration but don't fail
+  const optional = {
+    'AI API Key': config.ai.apiKey,
+    'JWT Secret': config.auth.jwtSecret,
+  };
+
+  const missingOptional = Object.entries(optional)
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+
+  if (missingOptional.length > 0) {
+    console.warn(
+      `⚠️  Missing optional configuration: ${missingOptional.join(', ')}\n` +
+      '   You can configure these settings via the Setup Wizard at: http://localhost:3000/api/setup\n' +
+      '   The application will start but some features may be limited.'
+    );
+  }
+}
+
+// Check if system is configured
+export function isSystemConfigured(): boolean {
+  return !!(config.ai.apiKey && config.auth.jwtSecret);
 }

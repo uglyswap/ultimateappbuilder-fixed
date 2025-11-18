@@ -46,8 +46,21 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
+      PORT: 3000
+      APP_URL: http://localhost:3000
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ultimate_app_builder?schema=public
       REDIS_URL: redis://redis:6379
+      # These can be left empty and configured via Setup Wizard
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+      # Autonomous Mode
+      AUTONOMOUS_MODE: ${AUTONOMOUS_MODE:-true}
+      AUTO_FIX_ERRORS: ${AUTO_FIX_ERRORS:-true}
+      AUTO_OPTIMIZE: ${AUTO_OPTIMIZE:-true}
+      AUTO_TEST: ${AUTO_TEST:-true}
+      AUTO_DEPLOY: ${AUTO_DEPLOY:-false}
     env_file:
       - .env
     depends_on:
@@ -63,7 +76,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
 volumes:
   postgres_data:
