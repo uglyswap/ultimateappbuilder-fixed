@@ -7,6 +7,8 @@ import customPromptsRouter from './custom-prompts.routes';
 import visualEditorRouter from './visual-editor.routes';
 import graphqlGeneratorRouter from './graphql-generator.routes';
 import mobileAppGeneratorRouter from './mobile-app-generator.routes';
+import deploymentRouter from './deployment.routes';
+import testingRouter from './testing.routes';
 
 const router = Router();
 
@@ -19,6 +21,8 @@ router.use('/custom-prompts', customPromptsRouter);
 router.use('/visual-editor', visualEditorRouter);
 router.use('/graphql', graphqlGeneratorRouter);
 router.use('/mobile', mobileAppGeneratorRouter);
+router.use('/deployment', deploymentRouter);
+router.use('/testing', testingRouter);
 
 // API info
 router.get('/', (req, res) => {
@@ -43,6 +47,8 @@ router.get('/', (req, res) => {
       pluginSystem: true,
       aiCodeReview: true,
       multiLanguage: true,
+      cloudDeployment: true,
+      aiPoweredTesting: true,
     },
     endpoints: {
       projects: '/api/projects',
@@ -53,6 +59,8 @@ router.get('/', (req, res) => {
       visualEditor: '/api/visual-editor',
       graphql: '/api/graphql',
       mobile: '/api/mobile',
+      deployment: '/api/deployment',
+      testing: '/api/testing',
     },
     documentation: '/api-docs',
     websocket: 'ws://localhost:3000/ws',
