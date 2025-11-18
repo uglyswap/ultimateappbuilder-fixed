@@ -472,15 +472,29 @@ Generate ONLY the component code, nothing else.`;
    * Save visual design to database
    */
   async saveDesign(design: PageDesign): Promise<void> {
-    // Save to database - store as JSON in project metadata
+    // Get existing project config
+    const project = await prisma.project.findUnique({
+      where: { id: design.projectId },
+    });
+
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    const existingConfig = project.config as any || {};
+    const visualDesigns = existingConfig.visualDesigns || {};
+
+    // Save to database - store as JSON in project config
     await prisma.project.update({
       where: { id: design.projectId },
       data: {
-        metadata: {
+        config: {
+          ...existingConfig,
           visualDesigns: {
+            ...visualDesigns,
             [design.id]: design,
           },
-        },
+        } as any,
       },
     });
 

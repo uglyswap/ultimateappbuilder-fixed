@@ -18,7 +18,7 @@ export class ProjectService {
         name: config.name,
         description: config.description,
         template: config.template,
-        config: config as unknown as Record<string, unknown>,
+        config: config as any,
         features: config.features.map(f => f.id),
         userId,
         status: 'DRAFT',
@@ -125,7 +125,7 @@ export class ProjectService {
       archive.on('error', reject);
 
       archive.pipe(output);
-      archive.directory(project.generatedPath, false);
+      archive.directory(project.generatedPath!, false);
       archive.finalize();
     });
   }
