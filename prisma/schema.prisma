@@ -23,6 +23,11 @@ model User {
   subscriptionStatus String?
   stripeCustomerId   String?          @unique
 
+  // Preferences & Settings
+  preferences   Json?  @default("{}")
+  autonomousMode Boolean @default(true)  // YOLO mode enabled by default
+  customSystemPrompts Json? @default("{}") // Custom prompts per agent type
+
   // Timestamps
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -32,6 +37,7 @@ model User {
   projects      Project[]
   apiKeys       ApiKey[]
   generations   Generation[]
+  customPrompts CustomPrompt[]
 
   @@index([email])
   @@map("users")
@@ -216,21 +222,39 @@ model Template {
   description     String
   category        String
 
+  // Category relation
+  categoryId      String?
+  categoryObj     TemplateCategory? @relation("CategoryTemplates", fields: [categoryId], references: [id])
+
   // Template content
   structure       Json
   dependencies    Json
   configuration   Json
 
+  // Preview & Demo
+  previewUrl      String?
+  demoUrl         String?
+  thumbnailUrl    String?
+  screenshots     String[]
+
+  // Features & Tags
+  features        String[]
+  tags            String[]
+  isPremium       Boolean  @default(false)
+  isOfficial      Boolean  @default(false)
+
   // Metadata
   version         String   @default("1.0.0")
   downloads       Int      @default(0)
   rating          Float?
+  author          String?
 
   // Timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@index([category])
+  @@index([isPremium])
   @@map("templates")
 }
 
@@ -245,6 +269,11 @@ model Job {
   attempts        Int       @default(0)
   maxAttempts     Int       @default(3)
   errorMessage    String?   @db.Text
+
+  // Progress tracking
+  progress        Int       @default(0) // 0-100
+  currentStep     String?
+  totalSteps      Int       @default(1)
 
   // Timestamps
   createdAt       DateTime  @default(now())
@@ -263,4 +292,67 @@ enum JobStatus {
   COMPLETED
   FAILED
   CANCELLED
+}
+
+// Custom System Prompts
+model CustomPrompt {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Prompt details
+  name            String
+  description     String?
+  agentType       AgentType
+  prompt          String   @db.Text
+  isActive        Boolean  @default(true)
+
+  // Metadata
+  version         String   @default("1.0.0")
+  tags            String[]
+  usageCount      Int      @default(0)
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([agentType])
+  @@map("custom_prompts")
+}
+
+// Premium Template Categories
+model TemplateCategory {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?
+  icon        String?
+  order       Int        @default(0)
+  templates   Template[] @relation("CategoryTemplates")
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("template_categories")
+}
+
+// Database Configuration Presets
+model DatabasePreset {
+  id              String   @id @default(cuid())
+  name            String
+  description     String
+  type            String   // postgresql, mysql, mongodb, sqlite, supabase, planetscale
+  connectionString String  @db.Text
+  autoSetup       Boolean  @default(true)
+  schema          Json?    // Pre-defined schema
+  migrations      Json?    // Auto-migration scripts
+
+  // Cloud provider integration
+  provider        String?  // supabase, planetscale, neon, railway
+  providerConfig  Json?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("database_presets")
 }

@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import { createServer } from 'http';
 import swaggerUi from 'swagger-ui-express';
 import { config, validateConfig } from '@/config';
 import { logger } from '@/utils/logger';
@@ -8,11 +9,14 @@ import apiRouter from '@/api/routes';
 import { errorHandler } from '@/api/middleware/error-handler';
 import { swaggerSpec } from '@/api/swagger';
 import { rateLimiter } from '@/api/middleware/rate-limiter';
+import { websocketService } from '@/services/websocket-service';
+import { jobQueueService } from '@/services/job-queue-service';
 
 // Validate configuration on startup
 validateConfig();
 
 const app = express();
+const server = createServer(app);
 
 // Security middleware
 app.use(helmet());
@@ -67,24 +71,78 @@ app.use((req, res) => {
 // Error handling
 app.use(errorHandler);
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
+// Initialize services
+async function initializeServices() {
+  try {
+    logger.info('🔧 Initializing services...');
 
-process.on('SIGINT', () => {
-  logger.info('SIGINT received, shutting down gracefully');
-  process.exit(0);
-});
+    // Initialize WebSocket server
+    websocketService.initialize(server);
+    logger.info('✅ WebSocket server initialized');
+
+    // Start job queue workers
+    await jobQueueService.startWorkers();
+    logger.info('✅ Job queue workers started');
+
+    logger.info('🎉 All services initialized successfully!');
+  } catch (error) {
+    logger.error('❌ Failed to initialize services', { error });
+    process.exit(1);
+  }
+}
+
+// Graceful shutdown
+async function gracefulShutdown(signal: string) {
+  logger.info(`${signal} received, shutting down gracefully...`);
+
+  try {
+    // Close WebSocket connections
+    websocketService.shutdown();
+    logger.info('✅ WebSocket server closed');
+
+    // Stop job queue workers
+    await jobQueueService.shutdown();
+    logger.info('✅ Job queue workers stopped');
+
+    // Close HTTP server
+    server.close(() => {
+      logger.info('✅ HTTP server closed');
+      process.exit(0);
+    });
+
+    // Force shutdown after 10 seconds
+    setTimeout(() => {
+      logger.warn('⚠️ Forcing shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  } catch (error) {
+    logger.error('❌ Error during shutdown', { error });
+    process.exit(1);
+  }
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // Start server
 const PORT = config.app.port;
 
-app.listen(PORT, () => {
-  logger.info(`🚀 ${config.app.name} v${config.app.version} started on port ${PORT}`);
-  logger.info(`Environment: ${config.app.env}`);
-  logger.info(`Health check: ${config.app.url}/health`);
+server.listen(PORT, async () => {
+  logger.info('═══════════════════════════════════════════════════════════════');
+  logger.info(`🚀 ${config.app.name} v${config.app.version}`);
+  logger.info('═══════════════════════════════════════════════════════════════');
+  logger.info(`🌐 Server: ${config.app.url}`);
+  logger.info(`⚡ Environment: ${config.app.env}`);
+  logger.info(`🩺 Health check: ${config.app.url}/health`);
+  logger.info(`📚 API Docs: ${config.app.url}/api-docs`);
+  logger.info(`🔌 WebSocket: ws://localhost:${PORT}/ws`);
+  logger.info(`🤖 Autonomous Mode: ${config.autonomous?.enabled ? 'ENABLED ✅' : 'DISABLED'}`);
+  logger.info('═══════════════════════════════════════════════════════════════');
+
+  // Initialize services
+  await initializeServices();
+
+  logger.info('✨ Ready to build amazing apps! ✨');
 });
 
 export default app;

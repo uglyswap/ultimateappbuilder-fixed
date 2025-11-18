@@ -26,16 +26,30 @@ export const config = {
 
   // AI Configuration
   ai: {
-    provider: (process.env.AI_PROVIDER || 'anthropic') as 'anthropic' | 'openai',
-    model: process.env.AI_MODEL || 'claude-sonnet-4',
+    provider: (process.env.AI_PROVIDER || 'anthropic') as 'anthropic' | 'openai' | 'openrouter',
+    model: process.env.AI_MODEL || 'claude-3-5-sonnet-20241022',
     maxTokens: parseInt(process.env.AI_MAX_TOKENS || '8000', 10),
     temperature: parseFloat(process.env.AI_TEMPERATURE || '0.7'),
     apiKey: process.env.ANTHROPIC_API_KEY || '',
   } as AIConfig,
 
-  // OpenAI (fallback)
+  // OpenAI
   openai: {
     apiKey: process.env.OPENAI_API_KEY || '',
+  },
+
+  // OpenRouter (access to 200+ models)
+  openrouter: {
+    apiKey: process.env.OPENROUTER_API_KEY || '',
+  },
+
+  // Autonomous Mode Settings
+  autonomous: {
+    enabled: process.env.AUTONOMOUS_MODE === 'true' || true, // Default ON for best UX
+    autoFix: process.env.AUTO_FIX_ERRORS === 'true' || true,
+    autoOptimize: process.env.AUTO_OPTIMIZE === 'true' || true,
+    autoTest: process.env.AUTO_TEST === 'true' || true,
+    autoDeploy: process.env.AUTO_DEPLOY === 'true' || false, // Keep deploy manual by default
   },
 
   // Authentication
