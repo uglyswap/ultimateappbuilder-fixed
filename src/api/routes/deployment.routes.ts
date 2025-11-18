@@ -22,20 +22,19 @@ router.post('/deploy', async (req: Request, res: Response) => {
     const result = await cloudDeploymentService.deploy(config);
 
     if (result.success) {
-      res.json({
-        success: true,
+      return res.json({
         ...result,
         message: `🚀 Deployed to ${config.platform} successfully!`,
       });
     } else {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: result.error,
       });
     }
   } catch (error) {
     logger.error('Deployment failed', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Deployment failed',
     });
@@ -51,13 +50,13 @@ router.get('/status/:deploymentId', async (req: Request, res: Response) => {
     const { deploymentId } = req.params;
     const status = await cloudDeploymentService.getDeploymentStatus(deploymentId);
 
-    res.json({
+    return res.json({
       success: true,
       ...status,
     });
   } catch (error) {
     logger.error('Failed to get deployment status', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get deployment status',
     });
@@ -73,13 +72,13 @@ router.get('/logs/:deploymentId', async (req: Request, res: Response) => {
     const { deploymentId } = req.params;
     const logs = await cloudDeploymentService.getLogs(deploymentId);
 
-    res.json({
+    return res.json({
       success: true,
       logs,
     });
   } catch (error) {
     logger.error('Failed to get deployment logs', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get deployment logs',
     });
@@ -95,13 +94,12 @@ router.post('/rollback/:deploymentId', async (req: Request, res: Response) => {
     const { deploymentId } = req.params;
     const result = await cloudDeploymentService.rollback(deploymentId);
 
-    res.json({
-      success: true,
+    return res.json({
       ...result,
     });
   } catch (error) {
     logger.error('Failed to rollback deployment', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to rollback deployment',
     });
@@ -125,14 +123,14 @@ router.post('/docker-config', async (req: Request, res: Response) => {
 
     const dockerfile = cloudDeploymentService.generateDockerConfig(projectType);
 
-    res.json({
+    return res.json({
       success: true,
       dockerfile,
       message: 'Dockerfile generated! 🐳',
     });
   } catch (error) {
     logger.error('Failed to generate Docker config', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate Docker configuration',
     });
@@ -156,14 +154,14 @@ router.post('/cicd-config', async (req: Request, res: Response) => {
 
     const config = await cloudDeploymentService.generateCICD(platform);
 
-    res.json({
+    return res.json({
       success: true,
       config,
       message: `CI/CD configuration for ${platform} generated! 🔄`,
     });
   } catch (error) {
     logger.error('Failed to generate CI/CD config', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate CI/CD configuration',
     });
@@ -235,13 +233,13 @@ router.get('/platforms', async (req: Request, res: Response) => {
       },
     ];
 
-    res.json({
+    return res.json({
       success: true,
       platforms,
     });
   } catch (error) {
     logger.error('Failed to get platforms', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get platforms',
     });

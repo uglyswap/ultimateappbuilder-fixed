@@ -21,14 +21,14 @@ router.post('/generate', async (req: Request, res: Response) => {
 
     const result = await mobileAppGeneratorService.generateMobileApp(config);
 
-    res.json({
+    return res.json({
       success: true,
       ...result,
       message: 'React Native mobile app generated! Ready for iOS & Android! 📱',
     });
   } catch (error) {
     logger.error('Failed to generate mobile app', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to generate mobile app',
     });
@@ -43,14 +43,14 @@ router.post('/build/ios', async (req: Request, res: Response) => {
   try {
     const config = await mobileAppGeneratorService.generateIOSBuildConfig();
 
-    res.json({
+    return res.json({
       success: true,
       config,
       message: 'iOS build configuration generated! 🍎',
     });
   } catch (error) {
     logger.error('Failed to generate iOS build config', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate iOS build configuration',
     });
@@ -65,14 +65,14 @@ router.post('/build/android', async (req: Request, res: Response) => {
   try {
     const config = await mobileAppGeneratorService.generateAndroidBuildConfig();
 
-    res.json({
+    return res.json({
       success: true,
       config,
       message: 'Android build configuration generated! 🤖',
     });
   } catch (error) {
     logger.error('Failed to generate Android build config', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate Android build configuration',
     });

@@ -21,14 +21,14 @@ router.post('/unit', async (req: Request, res: Response) => {
 
     const tests = await aiTestingService.generateUnitTests(code, fileName, framework);
 
-    res.json({
+    return res.json({
       success: true,
       ...tests,
       message: '✅ Unit tests generated with AI!',
     });
   } catch (error) {
     logger.error('Failed to generate unit tests', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to generate unit tests',
     });
@@ -52,14 +52,14 @@ router.post('/integration', async (req: Request, res: Response) => {
 
     const tests = await aiTestingService.generateIntegrationTests(apiEndpoints, framework);
 
-    res.json({
+    return res.json({
       success: true,
       ...tests,
       message: '✅ Integration tests generated!',
     });
   } catch (error) {
     logger.error('Failed to generate integration tests', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate integration tests',
     });
@@ -83,14 +83,14 @@ router.post('/e2e', async (req: Request, res: Response) => {
 
     const tests = await aiTestingService.generateE2ETests(userFlows, framework);
 
-    res.json({
+    return res.json({
       success: true,
       ...tests,
       message: '✅ E2E tests generated with Playwright/Cypress!',
     });
   } catch (error) {
     logger.error('Failed to generate E2E tests', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate E2E tests',
     });
@@ -114,14 +114,14 @@ router.post('/component', async (req: Request, res: Response) => {
 
     const tests = await aiTestingService.generateComponentTests(componentCode, componentName);
 
-    res.json({
+    return res.json({
       success: true,
       ...tests,
       message: '✅ Component tests generated with React Testing Library!',
     });
   } catch (error) {
     logger.error('Failed to generate component tests', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate component tests',
     });
@@ -145,14 +145,14 @@ router.post('/api', async (req: Request, res: Response) => {
 
     const tests = await aiTestingService.generateAPITests(apiSpec);
 
-    res.json({
+    return res.json({
       success: true,
       ...tests,
       message: '✅ API tests generated!',
     });
   } catch (error) {
     logger.error('Failed to generate API tests', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate API tests',
     });
@@ -176,14 +176,14 @@ router.post('/performance', async (req: Request, res: Response) => {
 
     const tests = await aiTestingService.generatePerformanceTests(endpoints);
 
-    res.json({
+    return res.json({
       success: true,
       ...tests,
       message: '✅ Performance tests generated with autocannon!',
     });
   } catch (error) {
     logger.error('Failed to generate performance tests', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate performance tests',
     });
@@ -207,14 +207,14 @@ router.post('/accessibility', async (req: Request, res: Response) => {
 
     const tests = await aiTestingService.generateAccessibilityTests(pages);
 
-    res.json({
+    return res.json({
       success: true,
       ...tests,
       message: '✅ Accessibility tests generated with axe-core!',
     });
   } catch (error) {
     logger.error('Failed to generate accessibility tests', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate accessibility tests',
     });
@@ -238,14 +238,14 @@ router.post('/from-user-story', async (req: Request, res: Response) => {
 
     const tests = await aiTestingService.generateTestFromUserStory(userStory);
 
-    res.json({
+    return res.json({
       success: true,
       ...tests,
       message: '✅ Test generated from user story!',
     });
   } catch (error) {
     logger.error('Failed to generate test from user story', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate test from user story',
     });
@@ -262,14 +262,13 @@ router.post('/run', async (req: Request, res: Response) => {
 
     const results = await aiTestingService.runTests(config);
 
-    res.json({
-      success: true,
+    return res.json({
       ...results,
       message: results.success ? '✅ All tests passed!' : '❌ Some tests failed',
     });
   } catch (error) {
     logger.error('Failed to run tests', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to run tests',
     });
@@ -319,13 +318,13 @@ router.get('/frameworks', async (req: Request, res: Response) => {
       ],
     };
 
-    res.json({
+    return res.json({
       success: true,
       frameworks,
     });
   } catch (error) {
     logger.error('Failed to get frameworks', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get frameworks',
     });
