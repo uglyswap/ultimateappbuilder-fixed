@@ -1,0 +1,157 @@
+version: '3.8'
+
+# Docker Compose with Traefik and nip.io domain
+# Automatically configured for: ultimate-app-builder.84.247.175.132.nip.io
+
+networks:
+  traefik-network:
+    external: true
+    name: dokploy-network
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  storage_data:
+    driver: local
+  generated_data:
+    driver: local
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: ultimate-app-builder-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-ultimate_app_builder}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: ultimate-app-builder-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app-network
+
+  # Main Application with Traefik
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    container_name: ultimate-app-builder-app
+    restart: unless-stopped
+    environment:
+      # Application Settings
+      NODE_ENV: production
+      PORT: 3000
+      APP_URL: ${APP_URL:-http://ultimate-app-builder.84.247.175.132.nip.io}
+
+      # Database Configuration
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-ultimate_app_builder}?schema=public
+      REDIS_URL: redis://redis:6379
+
+      # AI Provider Keys
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+
+      # AI Configuration
+      AI_PROVIDER: ${AI_PROVIDER:-anthropic}
+      AI_MODEL: ${AI_MODEL:-claude-3-5-sonnet-20241022}
+      AI_MAX_TOKENS: ${AI_MAX_TOKENS:-8000}
+      AI_TEMPERATURE: ${AI_TEMPERATURE:-0.7}
+
+      # Authentication
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+
+      # Autonomous Mode
+      AUTONOMOUS_MODE: ${AUTONOMOUS_MODE:-true}
+      AUTO_FIX_ERRORS: ${AUTO_FIX_ERRORS:-true}
+      AUTO_OPTIMIZE: ${AUTO_OPTIMIZE:-true}
+      AUTO_TEST: ${AUTO_TEST:-true}
+      AUTO_DEPLOY: ${AUTO_DEPLOY:-false}
+
+      # Storage
+      STORAGE_TYPE: ${STORAGE_TYPE:-local}
+      STORAGE_PATH: /app/storage
+
+      # Rate Limiting
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+
+      # Feature Flags
+      ENABLE_ANALYTICS: ${ENABLE_ANALYTICS:-true}
+      ENABLE_TELEMETRY: ${ENABLE_TELEMETRY:-false}
+      ENABLE_DEBUG_MODE: ${ENABLE_DEBUG_MODE:-false}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - storage_data:/app/storage
+      - generated_data:/app/generated
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - app-network
+      - traefik-network
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+
+      # HTTP Router
+      - "traefik.http.routers.ultimate-app-builder.rule=Host(`ultimate-app-builder.84.247.175.132.nip.io`)"
+      - "traefik.http.routers.ultimate-app-builder.entrypoints=web"
+      - "traefik.http.routers.ultimate-app-builder.service=ultimate-app-builder"
+
+      # HTTPS Router (with Let's Encrypt)
+      - "traefik.http.routers.ultimate-app-builder-secure.rule=Host(`ultimate-app-builder.84.247.175.132.nip.io`)"
+      - "traefik.http.routers.ultimate-app-builder-secure.entrypoints=websecure"
+      - "traefik.http.routers.ultimate-app-builder-secure.tls=true"
+      - "traefik.http.routers.ultimate-app-builder-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.ultimate-app-builder-secure.service=ultimate-app-builder"
+
+      # Service
+      - "traefik.http.services.ultimate-app-builder.loadbalancer.server.port=3000"
+
+      # Middleware - Redirect HTTP to HTTPS
+      - "traefik.http.middlewares.ultimate-app-builder-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.ultimate-app-builder-https.redirectscheme.permanent=true"
+      - "traefik.http.routers.ultimate-app-builder.middlewares=ultimate-app-builder-https"
+
+      # Headers
+      - "traefik.http.middlewares.ultimate-app-builder-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.ultimate-app-builder-secure.middlewares=ultimate-app-builder-headers"
