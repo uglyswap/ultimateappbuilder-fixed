@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { createServer } from 'http';
 import swaggerUi from 'swagger-ui-express';
+import path from 'path';
 import { config, validateConfig } from '@/config';
 import { logger } from '@/utils/logger';
 import apiRouter from '@/api/routes';
@@ -19,7 +20,10 @@ const app = express();
 const server = createServer(app);
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable for frontend assets
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(cors({
   origin: config.app.env === 'production' ? config.app.url : '*',
   credentials: true,
@@ -85,11 +89,26 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 // API routes
 app.use('/api', apiRouter);
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    status: 'error',
-    message: 'Not found',
+// Serve frontend static files
+const frontendPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendPath));
+
+// Serve frontend for all non-API routes (SPA fallback)
+app.get('*', (req, res, next) => {
+  // Skip API routes and static assets
+  if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
+    return next();
+  }
+
+  const indexPath = path.join(frontendPath, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      // If frontend not found, return 404 JSON
+      res.status(404).json({
+        status: 'error',
+        message: 'Not found',
+      });
+    }
   });
 });
 

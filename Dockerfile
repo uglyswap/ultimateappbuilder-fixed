@@ -6,21 +6,28 @@ WORKDIR /app
 # Install OpenSSL for Prisma
 RUN apk add --no-cache openssl
 
-# Copy package files
+# Copy package files for backend
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY prisma ./prisma/
 
-# Install dependencies
+# Install backend dependencies
 RUN npm ci
 
-# Copy source code
+# Copy backend source code
 COPY src ./src
 
 # Generate Prisma client
 RUN npx prisma generate
 
-# Build application
+# Build backend application
+RUN npm run build
+
+# Build frontend
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend ./
 RUN npm run build
 
 # Production stage
@@ -39,6 +46,9 @@ RUN npm ci --only=production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
+
+# Copy built frontend
+COPY --from=builder /app/frontend/dist ./frontend/dist
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/
