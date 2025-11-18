@@ -6,6 +6,7 @@ import type {
   OrchestratorContext,
   GeneratedProject,
   AgentType,
+  AgentMap,
 } from '@/types';
 import { BackendAgent } from '@/agents/backend';
 import { FrontendAgent } from '@/agents/frontend';
@@ -16,7 +17,7 @@ import { DevOpsAgent } from '@/agents/devops';
 
 export class Orchestrator {
   private context: OrchestratorContext;
-  private agents: Map<AgentType, any>;
+  private agents: AgentMap;
 
   constructor(projectId: string, userId: string, config: ProjectConfig) {
     this.context = {

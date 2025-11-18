@@ -18,7 +18,7 @@ export class ProjectService {
         name: config.name,
         description: config.description,
         template: config.template,
-        config: config as any,
+        config: config as unknown as Record<string, unknown>,
         features: config.features.map(f => f.id),
         userId,
         status: 'DRAFT',
@@ -70,7 +70,7 @@ export class ProjectService {
       const orchestrator = new Orchestrator(
         projectId,
         userId,
-        project.config as any
+        project.config as unknown as ProjectConfig
       );
 
       // Generate project

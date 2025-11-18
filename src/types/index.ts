@@ -158,3 +158,9 @@ export interface AgentContext {
   previousResults?: Record<string, unknown>;
   constraints?: Record<string, unknown>;
 }
+
+export interface Agent {
+  generate(context: OrchestratorContext): Promise<{ files: GeneratedFile[] }>;
+}
+
+export type AgentMap = Map<AgentType, Agent>;

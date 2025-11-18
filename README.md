@@ -75,6 +75,14 @@ npm run dev
 
 The API will be available at `http://localhost:3000`
 
+## 📊 API Documentation
+
+Once running, access the **interactive Swagger UI**:
+
+**http://localhost:3000/api-docs**
+
+Complete API documentation with request/response schemas, authentication details, and Try-it-out functionality!
+
 ## 📖 Usage
 
 ### 1. Using the API
@@ -236,6 +244,8 @@ See [docs/integrations.md](./docs/integrations.md)
 
 ## 🧪 Testing
 
+Comprehensive test suite with **Vitest**:
+
 ```bash
 # Run all tests
 npm test
@@ -245,13 +255,37 @@ npm run test:coverage
 
 # Run with UI
 npm run test:ui
+
+# Run specific test file
+npm test validators.test.ts
 ```
 
-## 📊 API Documentation
+### Test Coverage
 
-Once the server is running, visit:
-- Swagger UI: `http://localhost:3000/api-docs`
-- API Reference: [docs/api.md](./docs/api.md)
+- ✅ **Unit Tests**: Validators, helpers, utilities
+- ✅ **Integration Tests**: API endpoints, services
+- ✅ **Middleware Tests**: Rate limiting, error handling
+- ✅ **Agent Tests**: Code generation logic
+
+**Target**: 80%+ coverage
+
+## 🔒 Security Features
+
+- **Rate Limiting**: 100 requests per 15 minutes (configurable)
+- **JWT Authentication**: Secure token-based auth
+- **Password Hashing**: BCrypt with cost factor 10
+- **Input Validation**: Zod schemas for all inputs
+- **SQL Injection Protection**: Prisma ORM parameterized queries
+- **XSS Protection**: Helmet.js security headers
+- **CORS Configuration**: Configurable origin whitelisting
+
+## 🎯 Code Quality
+
+- **TypeScript Strict Mode**: Zero `any` types allowed
+- **ESLint**: Enforced code style and best practices
+- **Prettier**: Consistent code formatting
+- **Pre-commit Hooks**: Automatic linting and testing
+- **CI/CD**: GitHub Actions for automated testing and deployment
 
 ## 🚀 Deployment
 

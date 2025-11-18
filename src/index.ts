@@ -1,10 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import swaggerUi from 'swagger-ui-express';
 import { config, validateConfig } from '@/config';
 import { logger } from '@/utils/logger';
 import apiRouter from '@/api/routes';
 import { errorHandler } from '@/api/middleware/error-handler';
+import { swaggerSpec } from '@/api/swagger';
+import { rateLimiter } from '@/api/middleware/rate-limiter';
 
 // Validate configuration on startup
 validateConfig();
@@ -21,6 +24,9 @@ app.use(cors({
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Rate limiting
+app.use(rateLimiter);
 
 // Request logging
 app.use((req, res, next) => {
@@ -40,6 +46,12 @@ app.get('/health', (req, res) => {
     version: config.app.version,
   });
 });
+
+// Swagger documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Ultimate App Builder API Docs',
+}));
 
 // API routes
 app.use('/api', apiRouter);
