@@ -1,0 +1,59 @@
+
+> ultimate-app-builder@3.0.0 build
+> tsc && tsc-alias
+
+src/agents/backend.ts(29,39): error TS6133: 'context' is declared but its value is never read.
+src/agents/backend.ts(130,36): error TS6133: 'context' is declared but its value is never read.
+src/agents/backend.ts(203,37): error TS6133: 'context' is declared but its value is never read.
+src/agents/backend.ts(262,34): error TS6133: 'context' is declared but its value is never read.
+src/api/controllers/ai-models-controller.ts(56,22): error TS6133: 'req' is declared but its value is never read.
+src/api/controllers/generation-controller.ts(11,17): error TS6133: 'req' is declared but its value is never read.
+src/api/controllers/project-controller.ts(29,17): error TS6133: 'req' is declared but its value is never read.
+src/api/controllers/template-controller.ts(11,17): error TS6133: 'req' is declared but its value is never read.
+src/api/routes/deployment.routes.ts(175,33): error TS6133: 'req' is declared but its value is never read.
+src/api/routes/graphql-generator.routes.ts(112,53): error TS6133: 'req' is declared but its value is never read.
+src/api/routes/graphql-generator.routes.ts(134,32): error TS6133: 'req' is declared but its value is never read.
+src/api/routes/mobile-app-generator.routes.ts(42,34): error TS6133: 'req' is declared but its value is never read.
+src/api/routes/mobile-app-generator.routes.ts(64,38): error TS6133: 'req' is declared but its value is never read.
+src/api/routes/testing.routes.ts(282,34): error TS6133: 'req' is declared but its value is never read.
+src/api/routes/visual-editor.routes.ts(208,32): error TS6133: 'req' is declared but its value is never read.
+src/index.ts(36,15): error TS6133: 'res' is declared but its value is never read.
+src/index.ts(45,21): error TS6133: 'req' is declared but its value is never read.
+src/index.ts(64,10): error TS6133: 'req' is declared but its value is never read.
+src/orchestrator/index.ts(130,26): error TS18048: 'agent' is possibly 'undefined'.
+src/orchestrator/index.ts(145,26): error TS18048: 'agent' is possibly 'undefined'.
+src/orchestrator/index.ts(160,26): error TS18048: 'agent' is possibly 'undefined'.
+src/orchestrator/index.ts(175,26): error TS18048: 'agent' is possibly 'undefined'.
+src/orchestrator/index.ts(190,26): error TS18048: 'agent' is possibly 'undefined'.
+src/orchestrator/index.ts(205,26): error TS18048: 'agent' is possibly 'undefined'.
+src/orchestrator/intelligent-orchestrator.ts(322,13): error TS6133: 'agentContext' is declared but its value is never read.
+src/services/auto-database-service.ts(193,29): error TS6133: 'connectionString' is declared but its value is never read.
+src/services/auto-database-service.ts(193,55): error TS6133: 'schema' is declared but its value is never read.
+src/services/auto-database-service.ts(193,71): error TS6133: 'dbType' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(3,1): error TS6133: 'universalAIClient' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(7,7): error TS6133: 'execAsync' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(8,7): error TS6133: 'prisma' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(86,11): error TS6133: 'vercelConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(121,11): error TS6133: 'netlifyConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(154,11): error TS6133: 'serverlessConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(196,11): error TS6133: 'railwayConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(225,11): error TS6133: 'renderConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(256,11): error TS6133: 'procfile' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(275,11): error TS6133: 'doConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(309,11): error TS6133: 'cloudBuildConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(439,29): error TS6133: 'deploymentId' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(466,17): error TS6133: 'deploymentId' is declared but its value is never read.
+src/services/graphql-generator-service.ts(5,7): error TS6133: 'prisma' is declared but its value is never read.
+src/services/graphql-generator-service.ts(284,36): error TS6133: 'projectName' is declared but its value is never read.
+src/services/graphql-generator-service.ts(386,11): error TS6133: 'types' is declared but its value is never read.
+src/services/i18n-generator-service.ts(127,30): error TS6133: 'config' is declared but its value is never read.
+src/services/job-queue-service.ts(264,24): error TS6133: 'userId' is declared but its value is never read.
+src/services/microservices-generator-service.ts(248,38): error TS6133: 'services' is declared but its value is never read.
+src/services/mobile-app-generator-service.ts(5,7): error TS6133: 'prisma' is declared but its value is never read.
+src/services/mobile-app-generator-service.ts(320,36): error TS6133: 'config' is declared but its value is never read.
+src/services/mobile-app-generator-service.ts(355,35): error TS6133: 'config' is declared but its value is never read.
+src/services/mobile-app-generator-service.ts(453,36): error TS6133: 'config' is declared but its value is never read.
+src/services/plugin-system-service.ts(4,7): error TS6133: 'prisma' is declared but its value is never read.
+src/services/project-service.ts(4,1): error TS6192: All imports in import declaration are unused.
+src/services/visual-editor-service.ts(376,5): error TS6133: 'parentId' is declared but its value is never read.
+src/utils/validators.ts(2,15): error TS6196: 'ProjectConfig' is declared but never used.

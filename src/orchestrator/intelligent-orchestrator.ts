@@ -1,12 +1,12 @@
 import { logger } from '@/utils/logger';
 import { aiClient } from '@/utils/ai-client';
-import type {
-  ProjectConfig,
+import type { ProjectConfig,
+  
   AgentTask,
   OrchestratorContext,
   GeneratedProject,
   AgentType,
-  AgentMap,
+  Agent,
 } from '@/types';
 import { BackendAgent } from '@/agents/backend';
 import { FrontendAgent } from '@/agents/frontend';
@@ -28,7 +28,7 @@ import { ContextManager } from './context-manager';
  */
 export class IntelligentOrchestrator {
   private context: OrchestratorContext;
-  private agents: AgentMap;
+  private agents: Map<AgentType, Agent>;
   private contextManager: ContextManager;
   private taskQueue: AgentTask[] = [];
   private runningTasks: Set<string> = new Set();
@@ -46,7 +46,7 @@ export class IntelligentOrchestrator {
     };
 
     // Initialize specialized agents
-    this.agents = new Map([
+    this.agents = new Map<AgentType, Agent>([
       ['backend', new BackendAgent()],
       ['frontend', new FrontendAgent()],
       ['database', new DatabaseAgent()],
@@ -319,16 +319,12 @@ Return ONLY valid JSON, no explanation.
       }
 
       // Get relevant context for this agent
-      const agentContext = await this.contextManager.getContextForAgent(task.type);
+      await this.contextManager.getContextForAgent(task.type);
 
-      // Add context to orchestrator context
       this.context.currentPhase = `executing_${task.type}`;
 
       // Execute agent
-      const result = await agent.generate({
-        ...this.context,
-        previousResults: agentContext,
-      });
+      const result = await agent.generate(this.context);
 
       // Store results in context
       await this.contextManager.addToContext(`agent_${task.type}_output`, result);

@@ -197,7 +197,7 @@ export class JobQueueService {
 
       // Import orchestrator dynamically to avoid circular dependencies
       const { Orchestrator } = await import('@/orchestrator');
-      const orchestrator = new Orchestrator();
+      const orchestrator = new Orchestrator(projectId, userId, projectConfig);
 
       // Update progress: Orchestrating
       await job.updateProgress(20);
@@ -209,7 +209,7 @@ export class JobQueueService {
       });
 
       // Generate code
-      const result = await orchestrator.orchestrate(projectConfig);
+      const result = await orchestrator.orchestrate();
 
       // Update progress: Saving files
       await job.updateProgress(80);
@@ -235,7 +235,7 @@ export class JobQueueService {
       await job.updateProgress(100);
       websocketService.sendGenerationComplete(projectId, {
         success: true,
-        filesGenerated: Object.keys(result.files || {}).length,
+        filesGenerated: result.structure?.length || 0,
         downloadUrl: `/api/projects/${projectId}/download`,
       });
 
@@ -261,7 +261,7 @@ export class JobQueueService {
    * Process deployment job
    */
   private async processDeploymentJob(job: Job<DeploymentJob>) {
-    const { projectId, userId, provider, config: deployConfig } = job.data;
+    const { projectId, userId: _userId, provider, config: deployConfig } = job.data;
 
     try {
       logger.info('[JobQueue] Processing deployment', { projectId, provider });

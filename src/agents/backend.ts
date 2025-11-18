@@ -1,4 +1,4 @@
-import { aiClient } from '@/utils/ai-client';
+import { aiClient as _aiClient } from '@/utils/ai-client';
 import { logger } from '@/utils/logger';
 import type { OrchestratorContext, GeneratedFile } from '@/types';
 

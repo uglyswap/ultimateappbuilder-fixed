@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ProjectConfig, ValidationResult } from '@/types';
+import type {  ValidationResult } from '@/types';
 
 // Project Configuration Schema
 export const projectConfigSchema = z.object({

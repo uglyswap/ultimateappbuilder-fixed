@@ -25,7 +25,7 @@ router.use('/deployment', deploymentRouter);
 router.use('/testing', testingRouter);
 
 // API info
-router.get('/', (req, res) => {
+router.get('/', (_req, res) => {
   return res.json({
     name: 'Ultimate App Builder API',
     version: '3.0.0',

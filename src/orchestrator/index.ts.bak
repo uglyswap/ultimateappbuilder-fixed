@@ -2,10 +2,11 @@ import { logger } from '@/utils/logger';
 import { aiClient } from '@/utils/ai-client';
 import type {
   ProjectConfig,
+  AgentTask,
   OrchestratorContext,
   GeneratedProject,
   AgentType,
-  Agent,
+  AgentMap,
 } from '@/types';
 import { BackendAgent } from '@/agents/backend';
 import { FrontendAgent } from '@/agents/frontend';
@@ -16,7 +17,7 @@ import { DevOpsAgent } from '@/agents/devops';
 
 export class Orchestrator {
   private context: OrchestratorContext;
-  private agents: Map<AgentType, Agent>;
+  private agents: AgentMap;
 
   constructor(projectId: string, userId: string, config: ProjectConfig) {
     this.context = {
@@ -31,7 +32,7 @@ export class Orchestrator {
     };
 
     // Initialize agents
-    this.agents = new Map<AgentType, Agent>([
+    this.agents = new Map([
       ['backend', new BackendAgent()],
       ['frontend', new FrontendAgent()],
       ['database', new DatabaseAgent()],
@@ -115,7 +116,7 @@ Create a detailed plan including:
 Return a JSON object with the plan.
 `;
 
-    await aiClient.generateCode(planningPrompt, 'orchestrator');
+    const response = await aiClient.generateCode(planningPrompt, 'orchestrator');
 
     // Store planning result
     this.context.currentPhase = 'planning-complete';
@@ -127,9 +128,6 @@ Return a JSON object with the plan.
     this.context.currentPhase = 'database';
 
     const agent = this.agents.get('database');
-    if (!agent) {
-      throw new Error('Database agent not found');
-    }
     const result = await agent.generate(this.context);
 
     this.context.generatedFiles.push(...result.files);
@@ -145,9 +143,6 @@ Return a JSON object with the plan.
     this.context.currentPhase = 'backend';
 
     const agent = this.agents.get('backend');
-    if (!agent) {
-      throw new Error('Backend agent not found');
-    }
     const result = await agent.generate(this.context);
 
     this.context.generatedFiles.push(...result.files);
@@ -163,9 +158,6 @@ Return a JSON object with the plan.
     this.context.currentPhase = 'auth';
 
     const agent = this.agents.get('auth');
-    if (!agent) {
-      throw new Error('Auth agent not found');
-    }
     const result = await agent.generate(this.context);
 
     this.context.generatedFiles.push(...result.files);
@@ -181,9 +173,6 @@ Return a JSON object with the plan.
     this.context.currentPhase = 'frontend';
 
     const agent = this.agents.get('frontend');
-    if (!agent) {
-      throw new Error('Frontend agent not found');
-    }
     const result = await agent.generate(this.context);
 
     this.context.generatedFiles.push(...result.files);
@@ -199,9 +188,6 @@ Return a JSON object with the plan.
     this.context.currentPhase = 'integrations';
 
     const agent = this.agents.get('integrations');
-    if (!agent) {
-      throw new Error('Integrations agent not found');
-    }
     const result = await agent.generate(this.context);
 
     this.context.generatedFiles.push(...result.files);
@@ -217,9 +203,6 @@ Return a JSON object with the plan.
     this.context.currentPhase = 'devops';
 
     const agent = this.agents.get('devops');
-    if (!agent) {
-      throw new Error('DevOps agent not found');
-    }
     const result = await agent.generate(this.context);
 
     this.context.generatedFiles.push(...result.files);

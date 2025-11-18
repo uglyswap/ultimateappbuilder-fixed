@@ -62,7 +62,7 @@ export class AutoDatabaseService {
       logger.info('[AUTO-DB] Database created successfully! 🎉', {
         projectName: projectConfig.name,
         dbType,
-        tables: schema.models?.length || 0,
+        tables: (schema.match(/models+w+/g) || []).length,
       });
 
       return {
@@ -190,7 +190,7 @@ generator client {
   /**
    * Apply schema to database
    */
-  private async applySchema(connectionString: string, schema: string, dbType: DatabaseType): Promise<string[]> {
+  private async applySchema(_connectionString: string, _schema: string, _dbType: DatabaseType): Promise<string[]> {
     logger.info('[AUTO-DB] Applying schema and running migrations...');
 
     // In production, this would:

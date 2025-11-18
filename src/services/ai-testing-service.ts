@@ -79,11 +79,11 @@ Generate ONLY the test code, nothing else.`;
    */
   async generateIntegrationTests(
     apiEndpoints: string[],
-    framework: 'jest' | 'supertest' = 'jest'
+    framework: 'jest' | 'vitest' | 'mocha' = 'jest'
   ): Promise<GeneratedTests> {
     logger.info('Generating integration tests');
 
-    const prompt = `Generate integration tests for these API endpoints using ${framework} and Supertest.
+    const prompt = `Generate integration tests for these API endpoints using Jest and Supertest.
 
 Endpoints:
 ${apiEndpoints.map(e => `- ${e}`).join('\n')}

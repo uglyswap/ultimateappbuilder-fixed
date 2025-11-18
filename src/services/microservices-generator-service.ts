@@ -132,7 +132,7 @@ Object.entries(services).forEach(([path, target]) => {
 });
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'healthy', services: Object.keys(services) });
 });
 

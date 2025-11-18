@@ -1,11 +1,11 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient as _PrismaClient } from '@prisma/client';
 import { logger } from '@/utils/logger';
-import { universalAIClient } from '@/utils/universal-ai-client';
+import { universalAIClient as _universalAIClient } from '@/utils/universal-ai-client';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
-const execAsync = promisify(exec);
-const prisma = new PrismaClient();
+const _execAsync = promisify(exec);
+const _prisma = new _PrismaClient();
 
 /**
  * Cloud Deployment Service
@@ -83,7 +83,7 @@ export class CloudDeploymentService {
     logger.info('Deploying to Vercel');
 
     // Generate vercel.json
-    const vercelConfig = {
+    const _vercelConfig = {
       version: 2,
       builds: [
         {
@@ -118,7 +118,7 @@ export class CloudDeploymentService {
     logger.info('Deploying to Netlify');
 
     // Generate netlify.toml
-    const netlifyConfig = `
+    const _netlifyConfig = `
 [build]
   command = "${config.buildCommand || 'npm run build'}"
   publish = "dist"
@@ -151,7 +151,7 @@ ${Object.entries(config.envVars || {})
     logger.info('Deploying to AWS');
 
     // Generate serverless.yml for Serverless Framework
-    const serverlessConfig = `
+    const _serverlessConfig = `
 service: ${config.projectId}
 
 provider:
@@ -193,7 +193,7 @@ plugins:
     logger.info('Deploying to Railway');
 
     // Generate railway.json
-    const railwayConfig = {
+    const _railwayConfig = {
       build: {
         builder: 'NIXPACKS',
         buildCommand: config.buildCommand || 'npm run build',
@@ -222,7 +222,7 @@ plugins:
     logger.info('Deploying to Render');
 
     // Generate render.yaml
-    const renderConfig = `
+    const _renderConfig = `
 services:
   - type: web
     name: ${config.projectId}
@@ -253,7 +253,7 @@ ${Object.entries(config.envVars || {})
     logger.info('Deploying to Heroku');
 
     // Generate Procfile
-    const procfile = `web: ${config.startCommand || 'npm start'}`;
+    const _procfile = `web: ${config.startCommand || 'npm start'}`;
 
     const deploymentUrl = `https://${config.projectId}.herokuapp.com`;
 
@@ -272,7 +272,7 @@ ${Object.entries(config.envVars || {})
     logger.info('Deploying to DigitalOcean');
 
     // Generate .do/app.yaml
-    const doConfig = `
+    const _doConfig = `
 name: ${config.projectId}
 region: ${config.region || 'nyc'}
 services:
@@ -306,7 +306,7 @@ ${Object.entries(config.envVars || {})
     logger.info('Deploying to Google Cloud Platform');
 
     // Generate cloudbuild.yaml
-    const cloudBuildConfig = `
+    const _cloudBuildConfig = `
 steps:
   - name: 'gcr.io/cloud-builders/npm'
     args: ['install']

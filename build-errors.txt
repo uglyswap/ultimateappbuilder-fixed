@@ -1,0 +1,213 @@
+
+> ultimate-app-builder@3.0.0 build
+> tsc && tsc-alias
+
+src/agents/backend.ts(29,39): error TS6133: 'context' is declared but its value is never read.
+src/agents/backend.ts(130,36): error TS6133: 'context' is declared but its value is never read.
+src/agents/backend.ts(203,37): error TS6133: 'context' is declared but its value is never read.
+src/agents/backend.ts(262,34): error TS6133: 'context' is declared but its value is never read.
+src/api/controllers/ai-models-controller.ts(16,48): error TS2552: Cannot find name 'req'. Did you mean '_req'?
+src/api/controllers/ai-models-controller.ts(95,27): error TS2552: Cannot find name 'req'. Did you mean '_req'?
+src/api/controllers/generation-controller.ts(11,17): error TS6133: 'req' is declared but its value is never read.
+src/api/controllers/project-controller.ts(29,17): error TS6133: 'req' is declared but its value is never read.
+src/api/controllers/template-controller.ts(11,17): error TS6133: 'req' is declared but its value is never read.
+src/api/routes/deployment.routes.ts(13,20): error TS2304: Cannot find name 'req'.
+src/api/routes/deployment.routes.ts(16,14): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(25,14): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(30,14): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(37,12): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(50,30): error TS2304: Cannot find name 'req'.
+src/api/routes/deployment.routes.ts(53,12): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(59,12): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(72,30): error TS2304: Cannot find name 'req'.
+src/api/routes/deployment.routes.ts(75,12): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(81,12): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(94,30): error TS2304: Cannot find name 'req'.
+src/api/routes/deployment.routes.ts(97,12): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(102,12): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(115,29): error TS2304: Cannot find name 'req'.
+src/api/routes/deployment.routes.ts(118,14): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(126,12): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(133,12): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(146,26): error TS2304: Cannot find name 'req'.
+src/api/routes/deployment.routes.ts(149,14): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(157,12): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(164,12): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(236,12): error TS2304: Cannot find name 'res'.
+src/api/routes/deployment.routes.ts(242,12): error TS2304: Cannot find name 'res'.
+src/api/routes/graphql-generator.routes.ts(13,50): error TS2304: Cannot find name 'req'.
+src/api/routes/graphql-generator.routes.ts(16,14): error TS2304: Cannot find name 'res'.
+src/api/routes/graphql-generator.routes.ts(22,11): error TS6133: '_schema' is declared but its value is never read.
+src/api/routes/graphql-generator.routes.ts(28,12): error TS2304: Cannot find name 'res'.
+src/api/routes/graphql-generator.routes.ts(30,7): error TS18004: No value exists in scope for the shorthand property 'schema'. Either declare one or provide an initializer.
+src/api/routes/graphql-generator.routes.ts(35,12): error TS2304: Cannot find name 'res'.
+src/api/routes/graphql-generator.routes.ts(48,50): error TS2304: Cannot find name 'req'.
+src/api/routes/graphql-generator.routes.ts(51,14): error TS2304: Cannot find name 'res'.
+src/api/routes/graphql-generator.routes.ts(63,12): error TS2304: Cannot find name 'res'.
+src/api/routes/graphql-generator.routes.ts(70,12): error TS2304: Cannot find name 'res'.
+src/api/routes/graphql-generator.routes.ts(83,24): error TS2304: Cannot find name 'req'.
+src/api/routes/graphql-generator.routes.ts(86,14): error TS2304: Cannot find name 'res'.
+src/api/routes/graphql-generator.routes.ts(94,12): error TS2304: Cannot find name 'res'.
+src/api/routes/graphql-generator.routes.ts(101,12): error TS2304: Cannot find name 'res'.
+src/api/routes/graphql-generator.routes.ts(116,12): error TS2304: Cannot find name 'res'.
+src/api/routes/graphql-generator.routes.ts(123,12): error TS2304: Cannot find name 'res'.
+src/api/routes/graphql-generator.routes.ts(159,12): error TS2304: Cannot find name 'res'.
+src/api/routes/graphql-generator.routes.ts(165,12): error TS2304: Cannot find name 'res'.
+src/api/routes/mobile-app-generator.routes.ts(13,20): error TS2304: Cannot find name 'req'.
+src/api/routes/mobile-app-generator.routes.ts(16,14): error TS2304: Cannot find name 'res'.
+src/api/routes/mobile-app-generator.routes.ts(24,12): error TS2304: Cannot find name 'res'.
+src/api/routes/mobile-app-generator.routes.ts(31,12): error TS2304: Cannot find name 'res'.
+src/api/routes/mobile-app-generator.routes.ts(46,12): error TS2304: Cannot find name 'res'.
+src/api/routes/mobile-app-generator.routes.ts(53,12): error TS2304: Cannot find name 'res'.
+src/api/routes/mobile-app-generator.routes.ts(68,12): error TS2304: Cannot find name 'res'.
+src/api/routes/mobile-app-generator.routes.ts(75,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(13,43): error TS2304: Cannot find name 'req'.
+src/api/routes/testing.routes.ts(16,14): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(24,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(31,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(44,41): error TS2304: Cannot find name 'req'.
+src/api/routes/testing.routes.ts(47,14): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(55,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(62,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(75,38): error TS2304: Cannot find name 'req'.
+src/api/routes/testing.routes.ts(78,14): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(86,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(93,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(106,46): error TS2304: Cannot find name 'req'.
+src/api/routes/testing.routes.ts(109,14): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(117,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(124,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(137,25): error TS2304: Cannot find name 'req'.
+src/api/routes/testing.routes.ts(140,14): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(148,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(155,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(168,27): error TS2304: Cannot find name 'req'.
+src/api/routes/testing.routes.ts(171,14): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(179,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(186,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(199,23): error TS2304: Cannot find name 'req'.
+src/api/routes/testing.routes.ts(202,14): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(210,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(217,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(230,27): error TS2304: Cannot find name 'req'.
+src/api/routes/testing.routes.ts(233,14): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(241,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(248,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(261,20): error TS2304: Cannot find name 'req'.
+src/api/routes/testing.routes.ts(265,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(271,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(321,12): error TS2304: Cannot find name 'res'.
+src/api/routes/testing.routes.ts(327,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(13,26): error TS2304: Cannot find name 'req'.
+src/api/routes/visual-editor.routes.ts(17,14): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(23,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(30,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(43,44): error TS2304: Cannot find name 'req'.
+src/api/routes/visual-editor.routes.ts(46,14): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(54,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(61,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(74,26): error TS2304: Cannot find name 'req'.
+src/api/routes/visual-editor.routes.ts(75,48): error TS2304: Cannot find name 'req'.
+src/api/routes/visual-editor.routes.ts(78,14): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(91,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(98,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(111,24): error TS2304: Cannot find name 'req'.
+src/api/routes/visual-editor.routes.ts(114,14): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(124,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(132,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(145,24): error TS2304: Cannot find name 'req'.
+src/api/routes/visual-editor.routes.ts(148,14): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(156,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(162,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(175,50): error TS2304: Cannot find name 'req'.
+src/api/routes/visual-editor.routes.ts(178,14): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(190,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(197,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(243,12): error TS2304: Cannot find name 'res'.
+src/api/routes/visual-editor.routes.ts(249,12): error TS2304: Cannot find name 'res'.
+src/index.ts(36,15): error TS6133: 'res' is declared but its value is never read.
+src/orchestrator/intelligent-orchestrator.ts(36,59): error TS2304: Cannot find name 'ProjectConfig'.
+src/orchestrator/intelligent-orchestrator.ts(39,7): error TS18004: No value exists in scope for the shorthand property 'userId'. Either declare one or provide an initializer.
+src/orchestrator/intelligent-orchestrator.ts(322,13): error TS6133: '_agentContext' is declared but its value is never read.
+src/services/auto-database-service.ts(5,7): error TS6133: '_prisma' is declared but its value is never read.
+src/services/auto-database-service.ts(48,13): error TS6133: '_schema' is declared but its value is never read.
+src/services/auto-database-service.ts(51,13): error TS6133: '_dbType' is declared but its value is never read.
+src/services/auto-database-service.ts(54,13): error TS6133: '_connectionString' is declared but its value is never read.
+src/services/auto-database-service.ts(54,87): error TS2304: Cannot find name 'dbType'.
+src/services/auto-database-service.ts(57,49): error TS2304: Cannot find name 'connectionString'.
+src/services/auto-database-service.ts(57,67): error TS2304: Cannot find name 'schema'.
+src/services/auto-database-service.ts(57,75): error TS2304: Cannot find name 'dbType'.
+src/services/auto-database-service.ts(60,67): error TS2304: Cannot find name 'schema'.
+src/services/auto-database-service.ts(64,9): error TS18004: No value exists in scope for the shorthand property 'dbType'. Either declare one or provide an initializer.
+src/services/auto-database-service.ts(65,18): error TS2304: Cannot find name 'schema'.
+src/services/auto-database-service.ts(70,9): error TS18004: No value exists in scope for the shorthand property 'connectionString'. Either declare one or provide an initializer.
+src/services/auto-database-service.ts(71,9): error TS18004: No value exists in scope for the shorthand property 'schema'. Either declare one or provide an initializer.
+src/services/auto-database-service.ts(121,26): error TS2304: Cannot find name 'universalAIClient'.
+src/services/auto-database-service.ts(193,29): error TS6133: 'connectionString' is declared but its value is never read.
+src/services/auto-database-service.ts(193,55): error TS6133: 'schema' is declared but its value is never read.
+src/services/auto-database-service.ts(193,71): error TS6133: 'dbType' is declared but its value is never read.
+src/services/auto-database-service.ts(232,26): error TS2304: Cannot find name 'universalAIClient'.
+src/services/auto-database-service.ts(244,18): error TS2304: Cannot find name 'prisma'.
+src/services/auto-database-service.ts(263,18): error TS2304: Cannot find name 'prisma'.
+src/services/auto-database-service.ts(342,9): error TS2304: Cannot find name 'prisma'.
+src/services/cloud-deployment-service.ts(7,7): error TS6133: '_execAsync' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(8,7): error TS6133: '_prisma' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(86,11): error TS6133: '_vercelConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(121,11): error TS6133: '_netlifyConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(154,11): error TS6133: '_serverlessConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(196,11): error TS6133: '_railwayConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(225,11): error TS6133: '_renderConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(256,11): error TS6133: '_procfile' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(275,11): error TS6133: '_doConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(309,11): error TS6133: '_cloudBuildConfig' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(439,29): error TS6133: 'deploymentId' is declared but its value is never read.
+src/services/cloud-deployment-service.ts(466,17): error TS6133: 'deploymentId' is declared but its value is never read.
+src/services/graphql-generator-service.ts(5,7): error TS6133: '_prisma' is declared but its value is never read.
+src/services/graphql-generator-service.ts(138,26): error TS2304: Cannot find name 'universalAIClient'.
+src/services/graphql-generator-service.ts(144,13): error TS6133: '_schema' is declared but its value is never read.
+src/services/graphql-generator-service.ts(145,14): error TS2304: Cannot find name 'schema'.
+src/services/graphql-generator-service.ts(156,11): error TS6133: '_types' is declared but its value is never read.
+src/services/graphql-generator-service.ts(165,3): error TS2304: Cannot find name 'types'.
+src/services/graphql-generator-service.ts(273,26): error TS2304: Cannot find name 'universalAIClient'.
+src/services/graphql-generator-service.ts(284,36): error TS6133: 'projectName' is declared but its value is never read.
+src/services/graphql-generator-service.ts(386,11): error TS6133: '_types' is declared but its value is never read.
+src/services/graphql-generator-service.ts(431,11): error TS6133: '_schema' is declared but its value is never read.
+src/services/graphql-generator-service.ts(434,51): error TS2304: Cannot find name 'schema'.
+src/services/graphql-generator-service.ts(437,52): error TS2304: Cannot find name 'schema'.
+src/services/graphql-generator-service.ts(443,56): error TS2304: Cannot find name 'schema'.
+src/services/graphql-generator-service.ts(485,7): error TS18004: No value exists in scope for the shorthand property 'schema'. Either declare one or provide an initializer.
+src/services/i18n-generator-service.ts(73,26): error TS2304: Cannot find name 'universalAIClient'.
+src/services/i18n-generator-service.ts(127,30): error TS6133: 'config' is declared but its value is never read.
+src/services/job-queue-service.ts(7,7): error TS6133: '_prisma' is declared but its value is never read.
+src/services/job-queue-service.ts(147,11): error TS2304: Cannot find name 'prisma'.
+src/services/job-queue-service.ts(173,11): error TS2304: Cannot find name 'prisma'.
+src/services/job-queue-service.ts(226,13): error TS2304: Cannot find name 'prisma'.
+src/services/job-queue-service.ts(246,13): error TS2304: Cannot find name 'prisma'.
+src/services/job-queue-service.ts(264,24): error TS6133: 'userId' is declared but its value is never read.
+src/services/job-queue-service.ts(304,13): error TS2304: Cannot find name 'prisma'.
+src/services/job-queue-service.ts(317,13): error TS2304: Cannot find name 'prisma'.
+src/services/job-queue-service.ts(337,13): error TS2304: Cannot find name 'prisma'.
+src/services/microservices-generator-service.ts(88,26): error TS2304: Cannot find name 'universalAIClient'.
+src/services/microservices-generator-service.ts(248,38): error TS6133: 'services' is declared but its value is never read.
+src/services/mobile-app-generator-service.ts(5,7): error TS6133: '_prisma' is declared but its value is never read.
+src/services/mobile-app-generator-service.ts(267,26): error TS2304: Cannot find name 'universalAIClient'.
+src/services/mobile-app-generator-service.ts(307,28): error TS2304: Cannot find name 'universalAIClient'.
+src/services/mobile-app-generator-service.ts(320,36): error TS6133: 'config' is declared but its value is never read.
+src/services/mobile-app-generator-service.ts(355,35): error TS6133: 'config' is declared but its value is never read.
+src/services/mobile-app-generator-service.ts(453,36): error TS6133: 'config' is declared but its value is never read.
+src/services/plugin-system-service.ts(4,7): error TS6133: '_prisma' is declared but its value is never read.
+src/services/project-service.ts(4,1): error TS6192: All imports in import declaration are unused.
+src/services/project-service.ts(10,7): error TS6133: '_prisma' is declared but its value is never read.
+src/services/project-service.ts(16,27): error TS2552: Cannot find name 'prisma'. Did you mean '_prisma'?
+src/services/project-service.ts(32,12): error TS2552: Cannot find name 'prisma'. Did you mean '_prisma'?
+src/services/project-service.ts(39,12): error TS2552: Cannot find name 'prisma'. Did you mean '_prisma'?
+src/services/project-service.ts(54,11): error TS2552: Cannot find name 'prisma'. Did you mean '_prisma'?
+src/services/project-service.ts(61,29): error TS2552: Cannot find name 'prisma'. Did you mean '_prisma'?
+src/services/project-service.ts(84,13): error TS2552: Cannot find name 'prisma'. Did you mean '_prisma'?
+src/services/project-service.ts(98,13): error TS2552: Cannot find name 'prisma'. Did you mean '_prisma'?
+src/services/project-service.ts(108,27): error TS2552: Cannot find name 'prisma'. Did you mean '_prisma'?
+src/services/visual-editor-service.ts(5,7): error TS6133: '_prisma' is declared but its value is never read.
+src/services/visual-editor-service.ts(376,5): error TS6133: 'parentId' is declared but its value is never read.
+src/services/visual-editor-service.ts(425,26): error TS2304: Cannot find name 'universalAIClient'.
+src/services/visual-editor-service.ts(476,11): error TS2304: Cannot find name 'prisma'.
+src/services/visual-editor-service.ts(548,26): error TS2304: Cannot find name 'universalAIClient'.
