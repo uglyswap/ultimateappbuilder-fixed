@@ -1,0 +1,123 @@
+{
+  "version": "1.0",
+  "project": {
+    "name": "ultimate-app-builder",
+    "description": "The #1 AI-Powered App Builder - Generate production-ready apps with 200+ AI models"
+  },
+  "services": [
+    {
+      "type": "compose",
+      "name": "ultimate-app-builder",
+      "source": {
+        "type": "git",
+        "repository": "https://github.com/uglyswap/ultimateappbuilder-fixed",
+        "branch": "claude/fix-deployment-setup-018d1JAP1pEHGzVud4jprNdv"
+      },
+      "composeFile": "docker-compose.dokploy.yml",
+      "environment": {
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "${GENERATE_SECURE_PASSWORD}",
+        "POSTGRES_DB": "ultimate_app_builder",
+        "APP_URL": "http://84.247.175.132:3001",
+        "APP_PORT": "3001",
+        "PROJECT_NAME": "ultimate-app-builder",
+        "NODE_ENV": "production",
+        "ANTHROPIC_API_KEY": "",
+        "OPENAI_API_KEY": "",
+        "OPENROUTER_API_KEY": "",
+        "AI_PROVIDER": "anthropic",
+        "AI_MODEL": "claude-3-5-sonnet-20241022",
+        "JWT_SECRET": "${GENERATE_JWT_SECRET}",
+        "ENCRYPTION_KEY": "${GENERATE_ENCRYPTION_KEY}",
+        "AUTONOMOUS_MODE": "true",
+        "AUTO_FIX_ERRORS": "true",
+        "AUTO_OPTIMIZE": "true",
+        "AUTO_TEST": "true",
+        "AUTO_DEPLOY": "false"
+      },
+      "ports": [
+        {
+          "internal": 3000,
+          "external": 3001,
+          "protocol": "http"
+        }
+      ],
+      "volumes": [
+        {
+          "name": "postgres_data",
+          "mountPath": "/var/lib/postgresql/data",
+          "service": "postgres"
+        },
+        {
+          "name": "redis_data",
+          "mountPath": "/data",
+          "service": "redis"
+        },
+        {
+          "name": "storage_data",
+          "mountPath": "/app/storage",
+          "service": "app"
+        },
+        {
+          "name": "generated_data",
+          "mountPath": "/app/generated",
+          "service": "app"
+        }
+      ],
+      "healthcheck": {
+        "enabled": true,
+        "path": "/health",
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3
+      }
+    }
+  ],
+  "deployment": {
+    "strategy": "rolling",
+    "autoMigration": true,
+    "waitForHealthy": true
+  },
+  "networking": {
+    "internalNetwork": "app-network"
+  },
+  "metadata": {
+    "tags": ["ai", "app-builder", "nodejs", "react", "postgresql"],
+    "documentation": {
+      "quickstart": "DOKPLOY_QUICKSTART.md",
+      "fullGuide": "DOKPLOY_DEPLOYMENT.md",
+      "deployNow": "DEPLOY_NOW.md"
+    },
+    "links": {
+      "repository": "https://github.com/uglyswap/ultimateappbuilder-fixed",
+      "documentation": "https://github.com/uglyswap/ultimateappbuilder",
+      "apiDocs": "/api-docs"
+    }
+  },
+  "postDeploy": {
+    "instructions": [
+      "Wait 2-3 minutes for all services to start",
+      "Verify deployment: curl http://84.247.175.132:3001/health",
+      "Check setup status: curl http://84.247.175.132:3001/api/setup/status",
+      "Configure AI keys: curl -X POST http://84.247.175.132:3001/api/setup/complete -H 'Content-Type: application/json' -d '{\"aiProvider\":\"anthropic\",\"anthropicApiKey\":\"your-key\"}'",
+      "Access API docs: http://84.247.175.132:3001/api-docs",
+      "Start building apps!"
+    ],
+    "urls": {
+      "app": "http://84.247.175.132:3001",
+      "health": "http://84.247.175.132:3001/health",
+      "apiDocs": "http://84.247.175.132:3001/api-docs",
+      "setup": "http://84.247.175.132:3001/api/setup/status"
+    }
+  },
+  "security": {
+    "recommendations": [
+      "Regenerate Dokploy API key immediately (current key was exposed)",
+      "Use strong passwords for PostgreSQL",
+      "Configure SSL/HTTPS with a custom domain",
+      "Enable firewall rules to restrict access",
+      "Regularly backup PostgreSQL data volume",
+      "Monitor logs for suspicious activity"
+    ]
+  }
+}
