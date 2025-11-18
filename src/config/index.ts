@@ -108,8 +108,6 @@ export const config = {
 export function validateConfig(): void {
   const required = {
     'Database URL': config.database.url,
-    'AI API Key': config.ai.apiKey,
-    'JWT Secret': config.auth.jwtSecret,
   };
 
   const missing = Object.entries(required)
@@ -122,4 +120,17 @@ export function validateConfig(): void {
       'Please check your .env file and ensure all required variables are set.'
     );
   }
+
+  // Warn about missing API keys but don't fail
+  const warnings: string[] = [];
+  if (!config.ai.apiKey && !config.openai.apiKey && !config.openrouter.apiKey) {
+    warnings.push('No AI API keys configured. You can configure them via the /api/config endpoint after startup.');
+  }
+  if (config.auth.jwtSecret === 'change-this-secret-key') {
+    warnings.push('Using default JWT secret. Please set JWT_SECRET environment variable for production.');
+  }
+
+  warnings.forEach(warning => {
+    console.warn(`⚠️  WARNING: ${warning}`);
+  });
 }
