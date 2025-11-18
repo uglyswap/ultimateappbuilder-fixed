@@ -16,7 +16,7 @@ export function errorHandler(
   err: Error | AppError,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) {
   if (err instanceof AppError) {
     logger.error('Application error', {
@@ -37,7 +37,7 @@ export function errorHandler(
     path: req.path,
   });
 
-  res.status(500).json({
+  return res.status(500).json({
     status: 'error',
     message: 'Internal server error',
   });

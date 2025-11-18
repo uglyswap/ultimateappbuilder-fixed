@@ -26,7 +26,7 @@ router.use('/testing', testingRouter);
 
 // API info
 router.get('/', (req, res) => {
-  res.json({
+  return res.json({
     name: 'Ultimate App Builder API',
     version: '3.0.0',
     description: 'The #1 AI-Powered App Builder in the World 🌍',

@@ -25,14 +25,14 @@ router.post('/generate-schema', async (req: Request, res: Response) => {
       features || []
     );
 
-    res.json({
+    return res.json({
       success: true,
       schema,
       message: 'GraphQL schema generated successfully! 🚀',
     });
   } catch (error) {
     logger.error('Failed to generate GraphQL schema', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to generate GraphQL schema',
     });
@@ -60,14 +60,14 @@ router.post('/generate-complete-api', async (req: Request, res: Response) => {
       features || []
     );
 
-    res.json({
+    return res.json({
       success: true,
       ...result,
       message: 'Complete GraphQL API generated! Production-ready code with Apollo Server, DataLoaders, and subscriptions! 🎉',
     });
   } catch (error) {
     logger.error('Failed to generate complete GraphQL API', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to generate GraphQL API',
     });
@@ -91,14 +91,14 @@ router.post('/generate-resolvers', async (req: Request, res: Response) => {
 
     const resolvers = await graphqlGeneratorService.generateResolvers(schema);
 
-    res.json({
+    return res.json({
       success: true,
       resolvers,
       message: 'GraphQL resolvers generated! 💪',
     });
   } catch (error) {
     logger.error('Failed to generate resolvers', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate GraphQL resolvers',
     });
@@ -113,14 +113,14 @@ router.post('/generate-subscription-server', async (req: Request, res: Response)
   try {
     const subscriptionServer = await graphqlGeneratorService.generateSubscriptionServer();
 
-    res.json({
+    return res.json({
       success: true,
       subscriptionServer,
       message: 'GraphQL subscription server generated! Real-time updates ready! ⚡',
     });
   } catch (error) {
     logger.error('Failed to generate subscription server', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate subscription server',
     });
@@ -156,13 +156,13 @@ router.get('/examples', async (req: Request, res: Response) => {
       },
     ];
 
-    res.json({
+    return res.json({
       success: true,
       examples,
     });
   } catch (error) {
     logger.error('Failed to get GraphQL examples', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get examples',
     });

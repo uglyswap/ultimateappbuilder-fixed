@@ -29,14 +29,14 @@ export class CustomPromptsController {
         },
       });
 
-      res.json({
+      return res.json({
         success: true,
         count: prompts.length,
         prompts,
       });
     } catch (error) {
       logger.error('[Custom Prompts] Failed to get prompts', { error });
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to retrieve prompts',
       });
@@ -73,13 +73,13 @@ export class CustomPromptsController {
 
       logger.info('[Custom Prompts] Created prompt', { promptId: customPrompt.id, name });
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         prompt: customPrompt,
       });
     } catch (error) {
       logger.error('[Custom Prompts] Failed to create prompt', { error });
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to create prompt',
       });
@@ -121,13 +121,13 @@ export class CustomPromptsController {
 
       logger.info('[Custom Prompts] Updated prompt', { promptId: id });
 
-      res.json({
+      return res.json({
         success: true,
         prompt: updated,
       });
     } catch (error) {
       logger.error('[Custom Prompts] Failed to update prompt', { error });
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to update prompt',
       });
@@ -161,13 +161,13 @@ export class CustomPromptsController {
 
       logger.info('[Custom Prompts] Deleted prompt', { promptId: id });
 
-      res.json({
+      return res.json({
         success: true,
         message: 'Prompt deleted successfully',
       });
     } catch (error) {
       logger.error('[Custom Prompts] Failed to delete prompt', { error });
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to delete prompt',
       });
@@ -219,13 +219,13 @@ export class CustomPromptsController {
 
       logger.info('[Custom Prompts] Activated prompt', { promptId: id, agentType: prompt.agentType });
 
-      res.json({
+      return res.json({
         success: true,
         prompt: updated,
       });
     } catch (error) {
       logger.error('[Custom Prompts] Failed to activate prompt', { error });
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to activate prompt',
       });

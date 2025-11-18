@@ -20,14 +20,14 @@ router.get('/components', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       components: COMPONENT_LIBRARY,
       categories: ['layout', 'form', 'data', 'navigation', 'feedback', 'media'],
     });
   } catch (error) {
     logger.error('Failed to get components', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get component library',
     });
@@ -51,14 +51,14 @@ router.post('/design', async (req: Request, res: Response) => {
 
     const design = await visualEditorService.createDesign(projectId, pageName, route);
 
-    res.json({
+    return res.json({
       success: true,
       design,
       message: 'Visual design created successfully! 🎨',
     });
   } catch (error) {
     logger.error('Failed to create design', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to create visual design',
     });
@@ -88,14 +88,14 @@ router.post('/design/:designId/component', async (req: Request, res: Response) =
       props
     );
 
-    res.json({
+    return res.json({
       success: true,
       component,
       message: `Component ${componentType} added! ✨`,
     });
   } catch (error) {
     logger.error('Failed to add component', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to add component',
     });
@@ -121,7 +121,7 @@ router.post('/design/:designId/generate-code', async (req: Request, res: Respons
       design
     );
 
-    res.json({
+    return res.json({
       success: true,
       componentCode,
       routeConfig,
@@ -129,7 +129,7 @@ router.post('/design/:designId/generate-code', async (req: Request, res: Respons
     });
   } catch (error) {
     logger.error('Failed to generate code', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate code from design',
     });
@@ -153,13 +153,13 @@ router.post('/design/:designId/save', async (req: Request, res: Response) => {
 
     await visualEditorService.saveDesign(design);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Design saved successfully! 💾',
     });
   } catch (error) {
     logger.error('Failed to save design', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to save visual design',
     });
@@ -187,14 +187,14 @@ router.post('/generate-from-description', async (req: Request, res: Response) =>
       description
     );
 
-    res.json({
+    return res.json({
       success: true,
       design,
       message: 'AI-generated page design created! 🤖✨',
     });
   } catch (error) {
     logger.error('Failed to generate page from description', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to generate page design',
     });
@@ -240,13 +240,13 @@ router.get('/examples', async (req: Request, res: Response) => {
       },
     ];
 
-    res.json({
+    return res.json({
       success: true,
       examples,
     });
   } catch (error) {
     logger.error('Failed to get examples', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get example designs',
     });
