@@ -1,0 +1,84 @@
+{
+  "name": "ultimate-app-builder",
+  "appName": "ultimate-app-builder",
+  "description": "AI-Powered Full-Stack App Generator with 200+ AI models",
+  "composeType": "docker-compose",
+  "sourceType": "github",
+  "repository": "https://github.com/uglyswap/ultimateappbuilder-fixed",
+  "branch": "claude/fix-deployment-setup-018d1JAP1pEHGzVud4jprNdv",
+  "composePath": "docker-compose.traefik.yml",
+  "env": [
+    {
+      "name": "POSTGRES_PASSWORD",
+      "value": "UltimateAppBuilder2024SecurePass!"
+    },
+    {
+      "name": "APP_URL",
+      "value": "http://ultimate-app-builder.84.247.175.132.nip.io"
+    },
+    {
+      "name": "NODE_ENV",
+      "value": "production"
+    },
+    {
+      "name": "PORT",
+      "value": "3000"
+    },
+    {
+      "name": "PROJECT_NAME",
+      "value": "ultimate-app-builder"
+    },
+    {
+      "name": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "name": "POSTGRES_DB",
+      "value": "ultimate_app_builder"
+    },
+    {
+      "name": "DATABASE_URL",
+      "value": "postgresql://postgres:UltimateAppBuilder2024SecurePass!@postgres:5432/ultimate_app_builder?schema=public"
+    },
+    {
+      "name": "REDIS_URL",
+      "value": "redis://redis:6379"
+    },
+    {
+      "name": "AI_PROVIDER",
+      "value": "anthropic"
+    },
+    {
+      "name": "AI_MODEL",
+      "value": "claude-3-5-sonnet-20241022"
+    },
+    {
+      "name": "AUTONOMOUS_MODE",
+      "value": "true"
+    },
+    {
+      "name": "AUTO_FIX_ERRORS",
+      "value": "true"
+    },
+    {
+      "name": "AUTO_OPTIMIZE",
+      "value": "true"
+    },
+    {
+      "name": "AUTO_TEST",
+      "value": "true"
+    }
+  ],
+  "domains": [
+    {
+      "host": "ultimate-app-builder.84.247.175.132.nip.io",
+      "port": 3000,
+      "https": true,
+      "certificateType": "letsencrypt"
+    }
+  ],
+  "traefik": {
+    "enabled": true,
+    "domain": "ultimate-app-builder.84.247.175.132.nip.io"
+  }
+}
