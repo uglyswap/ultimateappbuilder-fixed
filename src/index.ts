@@ -45,31 +45,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Root route - API information
-app.get('/', (req, res) => {
-  res.json({
-    name: config.app.name,
-    version: config.app.version,
-    description: 'The #1 AI-Powered App Builder in the World - Generate production-ready apps in minutes with 200+ AI models',
-    status: 'running',
-    endpoints: {
-      health: '/health',
-      apiDocs: '/api-docs',
-      api: '/api'
-    },
-    features: [
-      '200+ AI Models Support',
-      'Multi-Agent Code Generation',
-      'Real-time WebSocket Updates',
-      'Visual Editor',
-      'Autonomous Mode',
-      'GitHub Integration'
-    ],
-    documentation: `${config.app.url}/api-docs`,
-    timestamp: new Date().toISOString()
-  });
-});
-
 // Health check
 app.get('/health', (req, res) => {
   res.json({
@@ -95,8 +70,8 @@ app.use(express.static(frontendPath));
 
 // Serve frontend for all non-API routes (SPA fallback)
 app.get('*', (req, res, next) => {
-  // Skip API routes and static assets
-  if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
+  // Skip API routes, health check, and api-docs
+  if (req.path.startsWith('/api') || req.path.startsWith('/health') || req.path.startsWith('/api-docs')) {
     return next();
   }
 
