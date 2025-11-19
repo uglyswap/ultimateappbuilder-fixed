@@ -8,6 +8,9 @@ import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { ProjectsListPage } from './pages/ProjectsListPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { FromScratchPage } from './pages/FromScratchPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { TestingSuitePage } from './pages/TestingSuitePage';
+import { DeploymentManagerPage } from './pages/DeploymentManagerPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,10 +29,15 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />} />
+            <Route path="dashboard" element={<DashboardPage />} />
             <Route path="create" element={<CreateProjectPage />} />
             <Route path="projects" element={<ProjectsListPage />} />
             <Route path="projects/:id" element={<ProjectDetailPage />} />
+            <Route path="projects/:projectId/testing" element={<TestingSuitePage />} />
+            <Route path="projects/:projectId/deployments" element={<DeploymentManagerPage />} />
             <Route path="build-from-scratch" element={<FromScratchPage />} />
+            <Route path="testing" element={<TestingSuitePage />} />
+            <Route path="deployments" element={<DeploymentManagerPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>
