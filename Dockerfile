@@ -7,7 +7,7 @@ WORKDIR /app
 RUN apk add --no-cache openssl
 
 # Cache busting - change this to force rebuild
-ARG CACHEBUST=20251119-001
+ARG CACHEBUST=20251119-002-FINAL-WITH-DIST
 RUN echo "Build timestamp: $CACHEBUST"
 
 # Copy ALL files first
