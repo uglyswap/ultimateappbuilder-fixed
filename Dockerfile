@@ -21,7 +21,7 @@ RUN npm run build
 
 # Build frontend
 WORKDIR /app/frontend
-RUN npm ci
+RUN npm install
 RUN npm run build
 
 # Production stage
