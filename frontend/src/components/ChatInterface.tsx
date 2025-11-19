@@ -53,9 +53,8 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
     setIsLoading(true);
 
     try {
-      // Call the real backend API
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${API_URL}/api/generate`, {
+      // Call the real backend API - use relative URL for same-origin requests
+      const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
