@@ -6,6 +6,10 @@ WORKDIR /app
 # Install OpenSSL for Prisma
 RUN apk add --no-cache openssl
 
+# Cache busting - change this to force rebuild
+ARG CACHEBUST=20251119-001
+RUN echo "Build timestamp: $CACHEBUST"
+
 # Copy ALL files first
 COPY . .
 
