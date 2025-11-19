@@ -53,15 +53,31 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
     setIsLoading(true);
 
     try {
-      // Simulate AI response - In real app, call your API here
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Call the real backend API
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${API_URL}/api/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: userMessage.content,
+          model: undefined, // Will use default model
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `I understand you want to ${input.toLowerCase()}. I'll generate the code for that now.`,
+        content: `I've generated the code for: "${userMessage.content}". Here's what I created:`,
         timestamp: new Date(),
-        code: `// Generated code for: ${input}\n\nfunction App() {\n  return (\n    <div>\n      <h1>Your App</h1>\n      <p>Generated based on your request</p>\n    </div>\n  );\n}\n\nexport default App;`,
+        code: result.data.code,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -73,7 +89,7 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please make sure the backend API is running and accessible.`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);

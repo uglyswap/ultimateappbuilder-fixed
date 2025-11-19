@@ -9,6 +9,7 @@ import graphqlGeneratorRouter from './graphql-generator.routes';
 import mobileAppGeneratorRouter from './mobile-app-generator.routes';
 import deploymentRouter from './deployment.routes';
 import testingRouter from './testing.routes';
+import simpleGenerateRouter from './simple-generate.routes';
 
 const router = Router();
 
@@ -23,6 +24,7 @@ router.use('/graphql', graphqlGeneratorRouter);
 router.use('/mobile', mobileAppGeneratorRouter);
 router.use('/deployment', deploymentRouter);
 router.use('/testing', testingRouter);
+router.use('/generate', simpleGenerateRouter);
 
 // API info
 router.get('/', (_req, res) => {
