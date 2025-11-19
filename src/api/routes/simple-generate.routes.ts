@@ -38,7 +38,7 @@ router.post('/', async (req: Request, res: Response) => {
       contentLength: result.content.length,
     });
 
-    res.json({
+    return res.json({
       status: 'success',
       data: {
         code: result.content,
@@ -49,7 +49,7 @@ router.post('/', async (req: Request, res: Response) => {
   } catch (error) {
     logger.error('Code generation failed', { error });
 
-    res.status(500).json({
+    return res.status(500).json({
       status: 'error',
       message: error instanceof Error ? error.message : 'Code generation failed',
     });
