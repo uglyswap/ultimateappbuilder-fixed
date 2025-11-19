@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, Code, Eye, Key, ChevronDown } from 'lucide-react';
+import { Send, Bot, User, Loader2, Code, Eye, Key, ChevronDown, RefreshCw } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -16,34 +16,10 @@ interface ChatInterfaceProps {
 
 type AIProvider = 'anthropic' | 'openai' | 'openrouter';
 
-// Up-to-date model lists (January 2025)
-const PROVIDER_MODELS: Record<AIProvider, { value: string; label: string }[]> = {
-  anthropic: [
-    { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet (Latest)' },
-    { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
-    { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
-    { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet' },
-    { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku' },
-  ],
-  openai: [
-    { value: 'gpt-4-turbo-preview', label: 'GPT-4 Turbo' },
-    { value: 'gpt-4-0125-preview', label: 'GPT-4 Turbo (0125)' },
-    { value: 'gpt-4', label: 'GPT-4' },
-    { value: 'gpt-4-32k', label: 'GPT-4 32K' },
-    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
-    { value: 'gpt-3.5-turbo-16k', label: 'GPT-3.5 Turbo 16K' },
-  ],
-  openrouter: [
-    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
-    { value: 'anthropic/claude-3-opus', label: 'Claude 3 Opus' },
-    { value: 'openai/gpt-4-turbo', label: 'GPT-4 Turbo' },
-    { value: 'openai/gpt-4', label: 'GPT-4' },
-    { value: 'google/gemini-pro', label: 'Gemini Pro' },
-    { value: 'meta-llama/llama-3-70b-instruct', label: 'Llama 3 70B' },
-    { value: 'mistralai/mixtral-8x7b-instruct', label: 'Mixtral 8x7B' },
-    { value: 'deepseek/deepseek-coder', label: 'DeepSeek Coder' },
-  ],
-};
+interface ModelOption {
+  value: string;
+  label: string;
+}
 
 const PROVIDER_LABELS: Record<AIProvider, string> = {
   anthropic: 'Anthropic (Claude)',
@@ -51,12 +27,19 @@ const PROVIDER_LABELS: Record<AIProvider, string> = {
   openrouter: 'OpenRouter (Multi-Model)',
 };
 
+// API endpoints for fetching models
+const MODEL_API_ENDPOINTS: Record<AIProvider, string> = {
+  anthropic: 'https://api.anthropic.com/v1/models',
+  openai: 'https://api.openai.com/v1/models',
+  openrouter: 'https://openrouter.ai/api/v1/models',
+};
+
 export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m here to help you build your application. Describe what you want to create, and I\'ll generate the code for you.\n\nExamples:\n• "Create a todo list app with React and TypeScript"\n• "Build a blog with authentication and comments"\n• "Make an e-commerce store with Stripe integration"\n\n✨ Choose your AI provider (Anthropic, OpenAI, or OpenRouter), select a model, and provide your API key to get started!',
+      content: 'Hello! I\'m here to help you build your application. Describe what you want to create, and I\'ll generate the code for you.\n\nExamples:\n• "Create a todo list app with React and TypeScript"\n• "Build a blog with authentication and comments"\n• "Make an e-commerce store with Stripe integration"\n\n✨ Choose your AI provider (Anthropic, OpenAI, or OpenRouter), enter your API key, and click the refresh button to load available models!',
       timestamp: new Date(),
     },
   ]);
@@ -66,7 +49,7 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
     return (localStorage.getItem('ai-provider') as AIProvider) || 'anthropic';
   });
   const [model, setModel] = useState(() => {
-    return localStorage.getItem('ai-model') || PROVIDER_MODELS.anthropic[0].value;
+    return localStorage.getItem('ai-model') || '';
   });
   const [apiKey, setApiKey] = useState(() => {
     return localStorage.getItem('ai-api-key') || '';
@@ -74,6 +57,9 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
   const [showApiKey, setShowApiKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showCode, setShowCode] = useState(false);
+  const [models, setModels] = useState<ModelOption[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [modelsError, setModelsError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Save preferences to localStorage
@@ -91,10 +77,11 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
     }
   }, [apiKey]);
 
-  // Update model when provider changes
+  // Reset model when provider changes
   useEffect(() => {
-    const defaultModel = PROVIDER_MODELS[provider][0].value;
-    setModel(defaultModel);
+    setModel('');
+    setModels([]);
+    setModelsError(null);
   }, [provider]);
 
   const scrollToBottom = () => {
@@ -105,6 +92,124 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
     scrollToBottom();
   }, [messages]);
 
+  // Fetch models from provider API
+  const fetchModels = async () => {
+    if (!apiKey.trim()) {
+      setModelsError('Please enter your API key first');
+      return;
+    }
+
+    setIsLoadingModels(true);
+    setModelsError(null);
+    setModels([]);
+
+    try {
+      let fetchedModels: ModelOption[] = [];
+
+      if (provider === 'anthropic') {
+        // Anthropic API - fetch models
+        const response = await fetch(MODEL_API_ENDPOINTS.anthropic, {
+          method: 'GET',
+          headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true',
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || `Anthropic API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        fetchedModels = data.data
+          .filter((m: any) => m.type === 'model')
+          .map((m: any) => ({
+            value: m.id,
+            label: m.display_name || m.id,
+          }))
+          .sort((a: ModelOption, b: ModelOption) => a.label.localeCompare(b.label));
+
+      } else if (provider === 'openai') {
+        // OpenAI API - fetch models
+        const response = await fetch(MODEL_API_ENDPOINTS.openai, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || `OpenAI API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        // Filter to show only chat/completion models and sort by name
+        fetchedModels = data.data
+          .filter((m: any) => {
+            const id = m.id.toLowerCase();
+            return (
+              id.includes('gpt') ||
+              id.includes('o1') ||
+              id.includes('chatgpt') ||
+              id.includes('davinci') ||
+              id.includes('turbo')
+            );
+          })
+          .map((m: any) => ({
+            value: m.id,
+            label: m.id,
+          }))
+          .sort((a: ModelOption, b: ModelOption) => {
+            // Sort GPT-4 models first, then GPT-3.5, then others
+            const aScore = a.value.includes('gpt-4') ? 0 : a.value.includes('gpt-3.5') ? 1 : 2;
+            const bScore = b.value.includes('gpt-4') ? 0 : b.value.includes('gpt-3.5') ? 1 : 2;
+            if (aScore !== bScore) return aScore - bScore;
+            return b.value.localeCompare(a.value); // Newer models first
+          });
+
+      } else if (provider === 'openrouter') {
+        // OpenRouter API - fetch models
+        const response = await fetch(MODEL_API_ENDPOINTS.openrouter, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'HTTP-Referer': window.location.origin,
+            'X-Title': 'Ultimate App Builder',
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || `OpenRouter API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        fetchedModels = data.data
+          .map((m: any) => ({
+            value: m.id,
+            label: m.name || m.id,
+          }))
+          .sort((a: ModelOption, b: ModelOption) => a.label.localeCompare(b.label));
+      }
+
+      setModels(fetchedModels);
+
+      // Auto-select first model if none selected
+      if (fetchedModels.length > 0 && !model) {
+        setModel(fetchedModels[0].value);
+      }
+
+    } catch (error) {
+      console.error('Error fetching models:', error);
+      setModelsError(error instanceof Error ? error.message : 'Failed to fetch models');
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -114,6 +219,17 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
         id: Date.now().toString(),
         role: 'assistant',
         content: 'Please provide your AI provider API key in the field above to use this service.',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      return;
+    }
+
+    if (!model) {
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: 'Please select a model first. Click the refresh button next to the model dropdown to load available models.',
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -187,7 +303,7 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
             <Bot className="w-8 h-8 text-purple-600" />
             <div>
               <h3 className="font-bold text-gray-900">AI Assistant</h3>
-              <p className="text-sm text-gray-500">Multi-provider code generation</p>
+              <p className="text-sm text-gray-500">Dynamic model loading from API</p>
             </div>
           </div>
           <button
@@ -212,68 +328,99 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
           </button>
         </div>
 
-        {/* Provider and Model Selection */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              AI Provider
-            </label>
-            <div className="relative">
-              <select
-                value={provider}
-                onChange={(e) => setProvider(e.target.value as AIProvider)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none bg-white pr-8"
-              >
-                {Object.entries(PROVIDER_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Model
-            </label>
-            <div className="relative">
-              <select
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none bg-white pr-8"
-              >
-                {PROVIDER_MODELS[provider].map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            </div>
+        {/* Provider Selection */}
+        <div className="mb-3">
+          <label className="block text-xs font-medium text-gray-700 mb-1">
+            AI Provider
+          </label>
+          <div className="relative">
+            <select
+              value={provider}
+              onChange={(e) => setProvider(e.target.value as AIProvider)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none bg-white pr-8"
+            >
+              {Object.entries(PROVIDER_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           </div>
         </div>
 
         {/* API Key Input */}
-        <div className="flex items-center gap-2">
-          <Key className="w-4 h-4 text-gray-400" />
-          <div className="flex-1 flex gap-2">
-            <input
-              type={showApiKey ? 'text' : 'password'}
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder={`Enter your ${PROVIDER_LABELS[provider]} API key...`}
-              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
+        <div className="mb-3">
+          <label className="block text-xs font-medium text-gray-700 mb-1">
+            API Key
+          </label>
+          <div className="flex items-center gap-2">
+            <Key className="w-4 h-4 text-gray-400" />
+            <div className="flex-1 flex gap-2">
+              <input
+                type={showApiKey ? 'text' : 'password'}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder={`Enter your ${PROVIDER_LABELS[provider]} API key...`}
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+              <button
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50"
+                title={showApiKey ? 'Hide API key' : 'Show API key'}
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Model Selection with Fetch Button */}
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-1">
+            Model ({models.length} available)
+          </label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <select
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                disabled={models.length === 0}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none bg-white pr-8 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                {models.length === 0 ? (
+                  <option value="">Click refresh to load models...</option>
+                ) : (
+                  models.map((m) => (
+                    <option key={m.value} value={m.value}>
+                      {m.label}
+                    </option>
+                  ))
+                )}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
             <button
-              onClick={() => setShowApiKey(!showApiKey)}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50"
-              title={showApiKey ? 'Hide API key' : 'Show API key'}
+              onClick={fetchModels}
+              disabled={isLoadingModels || !apiKey.trim()}
+              className={`px-3 py-2 rounded-lg border transition-all ${
+                isLoadingModels || !apiKey.trim()
+                  ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                  : 'bg-purple-50 text-purple-600 border-purple-300 hover:bg-purple-100'
+              }`}
+              title="Load models from API"
             >
-              <Eye className="w-4 h-4" />
+              <RefreshCw className={`w-4 h-4 ${isLoadingModels ? 'animate-spin' : ''}`} />
             </button>
           </div>
+          {modelsError && (
+            <p className="text-xs text-red-500 mt-1">{modelsError}</p>
+          )}
+          {models.length > 0 && (
+            <p className="text-xs text-green-600 mt-1">
+              {models.length} models loaded successfully
+            </p>
+          )}
         </div>
       </div>
 

@@ -9,7 +9,7 @@ lerna-debug.log*
 
 # Dependencies
 node_modules
-dist
+# dist - COMMENTED OUT: We commit frontend/dist for deployment
 dist-ssr
 *.local
 
