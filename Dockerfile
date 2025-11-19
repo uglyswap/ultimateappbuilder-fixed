@@ -6,16 +6,12 @@ WORKDIR /app
 # Install OpenSSL for Prisma
 RUN apk add --no-cache openssl
 
-# Copy package files for backend
-COPY package*.json ./
-COPY tsconfig.json ./
-COPY prisma ./prisma/
+# Copy ALL files first
+COPY . .
 
 # Install backend dependencies
+WORKDIR /app
 RUN npm ci
-
-# Copy backend source code
-COPY src ./src
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -25,9 +21,7 @@ RUN npm run build
 
 # Build frontend
 WORKDIR /app/frontend
-COPY frontend/package*.json ./
 RUN npm ci
-COPY frontend ./
 RUN npm run build
 
 # Production stage
