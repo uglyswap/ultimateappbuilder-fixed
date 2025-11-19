@@ -11,6 +11,14 @@ import { FromScratchPage } from './pages/FromScratchPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { TestingSuitePage } from './pages/TestingSuitePage';
 import { DeploymentManagerPage } from './pages/DeploymentManagerPage';
+import { VisualEditorPage } from './pages/VisualEditorPage';
+import { GraphQLGeneratorPage } from './pages/GraphQLGeneratorPage';
+import { MobileAppGeneratorPage } from './pages/MobileAppGeneratorPage';
+import { CodeReviewPage } from './pages/CodeReviewPage';
+import { DatabaseToolsPage } from './pages/DatabaseToolsPage';
+import { MicroservicesPage } from './pages/MicroservicesPage';
+import { I18NPage } from './pages/I18NPage';
+import { PremiumTemplatesPage } from './pages/PremiumTemplatesPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +47,21 @@ function App() {
             <Route path="testing" element={<TestingSuitePage />} />
             <Route path="deployments" element={<DeploymentManagerPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="visual-editor" element={<VisualEditorPage />} />
+            <Route path="projects/:projectId/visual-editor" element={<VisualEditorPage />} />
+            <Route path="graphql" element={<GraphQLGeneratorPage />} />
+            <Route path="projects/:projectId/graphql" element={<GraphQLGeneratorPage />} />
+            <Route path="mobile-app" element={<MobileAppGeneratorPage />} />
+            <Route path="projects/:projectId/mobile-app" element={<MobileAppGeneratorPage />} />
+            <Route path="code-review" element={<CodeReviewPage />} />
+            <Route path="projects/:projectId/code-review" element={<CodeReviewPage />} />
+            <Route path="database-tools" element={<DatabaseToolsPage />} />
+            <Route path="projects/:projectId/database-tools" element={<DatabaseToolsPage />} />
+            <Route path="microservices" element={<MicroservicesPage />} />
+            <Route path="projects/:projectId/microservices" element={<MicroservicesPage />} />
+            <Route path="i18n" element={<I18NPage />} />
+            <Route path="projects/:projectId/i18n" element={<I18NPage />} />
+            <Route path="premium-templates" element={<PremiumTemplatesPage />} />
           </Route>
         </Routes>
       </BrowserRouter>
