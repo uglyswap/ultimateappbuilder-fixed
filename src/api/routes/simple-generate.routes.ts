@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { universalAIClient } from '@/utils/universal-ai-client';
 import { logger } from '@/utils/logger';
+import Anthropic from '@anthropic-ai/sdk';
 
 const router = Router();
 
@@ -11,7 +12,7 @@ const router = Router();
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { prompt, model } = req.body;
+    const { prompt, model, apiKey } = req.body;
 
     if (!prompt) {
       return res.status(400).json({
@@ -20,30 +21,45 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
-    logger.info('Generating code from prompt', { prompt, model });
+    if (!apiKey) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'API key is required. Please provide your Anthropic API key.',
+      });
+    }
 
-    // Use the universal AI client to generate code
-    const result = await universalAIClient.generateCode(
-      prompt,
-      'frontend', // Use frontend agent for UI generation
-      {
-        model: model || undefined, // Use provided model or default
-        temperature: 0.7,
-        maxTokens: 4000,
-      }
-    );
+    logger.info('Generating code from prompt with user-provided API key');
+
+    // Create an Anthropic client with user's API key
+    const anthropic = new Anthropic({
+      apiKey: apiKey,
+    });
+
+    // Generate code using Claude
+    const response = await anthropic.messages.create({
+      model: model || 'claude-3-5-sonnet-20241022',
+      max_tokens: 4000,
+      temperature: 0.7,
+      messages: [{
+        role: 'user',
+        content: `You are an expert full-stack developer. Generate clean, production-ready code based on the following request:\n\n${prompt}\n\nProvide only the code without explanations.`
+      }]
+    });
+
+    const generatedCode = response.content[0].type === 'text' ? response.content[0].text : '';
+    const tokensUsed = response.usage.input_tokens + response.usage.output_tokens;
 
     logger.info('Code generated successfully', {
-      tokensUsed: result.tokensUsed,
-      contentLength: result.content.length,
+      tokensUsed,
+      contentLength: generatedCode.length,
     });
 
     return res.json({
       status: 'success',
       data: {
-        code: result.content,
-        tokensUsed: result.tokensUsed,
-        model: model || 'default',
+        code: generatedCode,
+        tokensUsed,
+        model: model || 'claude-3-5-sonnet-20241022',
       },
     });
   } catch (error) {
@@ -51,7 +67,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     return res.status(500).json({
       status: 'error',
-      message: error instanceof Error ? error.message : 'Code generation failed',
+      message: error instanceof Error ? `AI generation failed: ${error.message}` : 'Code generation failed',
     });
   }
 });

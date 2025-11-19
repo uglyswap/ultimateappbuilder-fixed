@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, Code, Eye } from 'lucide-react';
+import { Send, Bot, User, Loader2, Code, Eye, Key } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -19,15 +19,27 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m here to help you build your application. Describe what you want to create, and I\'ll generate the code for you. For example:\n\n"Create a todo list app with React and TypeScript"\n"Build a blog with authentication and comments"\n"Make an e-commerce store with Stripe integration"',
+      content: 'Hello! I\'m here to help you build your application. Describe what you want to create, and I\'ll generate the code for you. For example:\n\n"Create a todo list app with React and TypeScript"\n"Build a blog with authentication and comments"\n"Make an e-commerce store with Stripe integration"\n\nNote: You need to provide your Anthropic API key to use this service.',
       timestamp: new Date(),
     },
   ]);
 
   const [input, setInput] = useState('');
+  const [apiKey, setApiKey] = useState(() => {
+    // Load API key from localStorage if available
+    return localStorage.getItem('anthropic-api-key') || '';
+  });
+  const [showApiKey, setShowApiKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showCode, setShowCode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Save API key to localStorage whenever it changes
+  useEffect(() => {
+    if (apiKey) {
+      localStorage.setItem('anthropic-api-key', apiKey);
+    }
+  }, [apiKey]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -40,6 +52,18 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
+
+    // Check if API key is provided
+    if (!apiKey.trim()) {
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: 'Please provide your Anthropic API key in the field above to use this service.',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -62,6 +86,7 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
         body: JSON.stringify({
           prompt: userMessage.content,
           model: undefined, // Will use default model
+          apiKey: apiKey, // Send user's API key
         }),
       });
 
@@ -100,34 +125,61 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
   return (
     <div className="flex flex-col h-full bg-white rounded-2xl shadow-lg border border-gray-200">
       {/* Chat Header */}
-      <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Bot className="w-8 h-8 text-purple-600" />
-          <div>
-            <h3 className="font-bold text-gray-900">AI Assistant</h3>
-            <p className="text-sm text-gray-500">Build anything with conversation</p>
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Bot className="w-8 h-8 text-purple-600" />
+            <div>
+              <h3 className="font-bold text-gray-900">AI Assistant</h3>
+              <p className="text-sm text-gray-500">Build anything with conversation</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowCode(!showCode)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
+              showCode
+                ? 'bg-purple-100 text-purple-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {showCode ? (
+              <>
+                <Eye className="w-4 h-4" />
+                Chat
+              </>
+            ) : (
+              <>
+                <Code className="w-4 h-4" />
+                Code
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* API Key Input */}
+        <div className="flex items-center gap-2">
+          <Key className="w-4 h-4 text-gray-400" />
+          <div className="flex-1 flex gap-2">
+            <input
+              type={showApiKey ? 'text' : 'password'}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Enter your Anthropic API key (sk-ant-...)"
+              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            <button
+              onClick={() => setShowApiKey(!showApiKey)}
+              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50"
+              title={showApiKey ? 'Hide API key' : 'Show API key'}
+            >
+              {showApiKey ? (
+                <Eye className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
           </div>
         </div>
-        <button
-          onClick={() => setShowCode(!showCode)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
-            showCode
-              ? 'bg-purple-100 text-purple-700'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          {showCode ? (
-            <>
-              <Eye className="w-4 h-4" />
-              Chat
-            </>
-          ) : (
-            <>
-              <Code className="w-4 h-4" />
-              Code
-            </>
-          )}
-        </button>
       </div>
 
       {/* Messages */}
