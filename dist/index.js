@@ -8,6 +8,7 @@ const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const http_1 = require("http");
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+const path_1 = __importDefault(require("path"));
 const config_1 = require("./config");
 const logger_1 = require("./utils/logger");
 const routes_1 = __importDefault(require("./api/routes"));
@@ -21,7 +22,10 @@ const job_queue_service_1 = require("./services/job-queue-service");
 const app = (0, express_1.default)();
 const server = (0, http_1.createServer)(app);
 // Security middleware
-app.use((0, helmet_1.default)());
+app.use((0, helmet_1.default)({
+    contentSecurityPolicy: false, // Disable for frontend assets
+    crossOriginEmbedderPolicy: false,
+}));
 app.use((0, cors_1.default)({
     origin: config_1.config.app.env === 'production' ? config_1.config.app.url : '*',
     credentials: true,
@@ -55,11 +59,24 @@ app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.de
 }));
 // API routes
 app.use('/api', routes_1.default);
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({
-        status: 'error',
-        message: 'Not found',
+// Serve frontend static files
+const frontendPath = path_1.default.join(__dirname, '../frontend/dist');
+app.use(express_1.default.static(frontendPath));
+// Serve frontend for all non-API routes (SPA fallback)
+app.get('*', (req, res, next) => {
+    // Skip API routes, health check, api-docs, and static assets
+    if (req.path.startsWith('/api') || req.path.startsWith('/health') || req.path.startsWith('/api-docs') || req.path.startsWith('/assets/')) {
+        return next();
+    }
+    const indexPath = path_1.default.join(frontendPath, 'index.html');
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            // If frontend not found, return 404 JSON
+            res.status(404).json({
+                status: 'error',
+                message: 'Not found',
+            });
+        }
     });
 });
 // Error handling

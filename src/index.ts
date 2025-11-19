@@ -70,8 +70,8 @@ app.use(express.static(frontendPath));
 
 // Serve frontend for all non-API routes (SPA fallback)
 app.get('*', (req, res, next) => {
-  // Skip API routes, health check, and api-docs
-  if (req.path.startsWith('/api') || req.path.startsWith('/health') || req.path.startsWith('/api-docs')) {
+  // Skip API routes, health check, api-docs, and static assets
+  if (req.path.startsWith('/api') || req.path.startsWith('/health') || req.path.startsWith('/api-docs') || req.path.startsWith('/assets/')) {
     return next();
   }
 

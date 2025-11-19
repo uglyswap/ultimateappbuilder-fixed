@@ -14,6 +14,7 @@ const graphql_generator_routes_1 = __importDefault(require("./graphql-generator.
 const mobile_app_generator_routes_1 = __importDefault(require("./mobile-app-generator.routes"));
 const deployment_routes_1 = __importDefault(require("./deployment.routes"));
 const testing_routes_1 = __importDefault(require("./testing.routes"));
+const simple_generate_routes_1 = __importDefault(require("./simple-generate.routes"));
 const router = (0, express_1.Router)();
 // API routes
 router.use('/projects', projects_1.default);
@@ -26,6 +27,7 @@ router.use('/graphql', graphql_generator_routes_1.default);
 router.use('/mobile', mobile_app_generator_routes_1.default);
 router.use('/deployment', deployment_routes_1.default);
 router.use('/testing', testing_routes_1.default);
+router.use('/generate', simple_generate_routes_1.default);
 // API info
 router.get('/', (_req, res) => {
     return res.json({
