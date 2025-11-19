@@ -23,12 +23,11 @@ RUN npx prisma generate
 # Build backend application
 RUN npm run build
 
-# Build frontend
-WORKDIR /app/frontend
-# Fix package.json build script to skip tsc type checking
-RUN sed -i 's/"build": "tsc && vite build"/"build": "vite build"/g' package.json
-RUN npm install
-RUN npm run build
+# Frontend is pre-built and committed - skip build step
+# WORKDIR /app/frontend
+# RUN sed -i 's/"build": "tsc && vite build"/"build": "vite build"/g' package.json
+# RUN npm install
+# RUN npm run build
 
 # Production stage
 FROM node:20-alpine

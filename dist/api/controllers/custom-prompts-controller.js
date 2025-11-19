@@ -1,0 +1,217 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.customPromptsController = exports.CustomPromptsController = void 0;
+const client_1 = require("@prisma/client");
+const logger_1 = require("../../utils/logger");
+const prisma = new client_1.PrismaClient();
+/**
+ * Custom Prompts Controller
+ * Manage user-defined system prompts for AI agents
+ */
+class CustomPromptsController {
+    /**
+     * GET /api/custom-prompts
+     * Get all custom prompts for the user
+     */
+    async getUserPrompts(req, res) {
+        try {
+            const userId = 'demo-user'; // TODO: Get from auth
+            const { agentType, isActive } = req.query;
+            const where = { userId };
+            if (agentType)
+                where.agentType = agentType;
+            if (isActive !== undefined)
+                where.isActive = isActive === 'true';
+            const prompts = await prisma.customPrompt.findMany({
+                where,
+                orderBy: {
+                    usageCount: 'desc',
+                },
+            });
+            return res.json({
+                success: true,
+                count: prompts.length,
+                prompts,
+            });
+        }
+        catch (error) {
+            logger_1.logger.error('[Custom Prompts] Failed to get prompts', { error });
+            return res.status(500).json({
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to retrieve prompts',
+            });
+        }
+    }
+    /**
+     * POST /api/custom-prompts
+     * Create a new custom prompt
+     */
+    async createPrompt(req, res) {
+        try {
+            const userId = 'demo-user'; // TODO: Get from auth
+            const { name, description, agentType, prompt, tags } = req.body;
+            if (!name || !agentType || !prompt) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Missing required fields: name, agentType, prompt',
+                });
+            }
+            const customPrompt = await prisma.customPrompt.create({
+                data: {
+                    userId,
+                    name,
+                    description,
+                    agentType,
+                    prompt,
+                    tags: tags || [],
+                    isActive: true,
+                },
+            });
+            logger_1.logger.info('[Custom Prompts] Created prompt', { promptId: customPrompt.id, name });
+            return res.status(201).json({
+                success: true,
+                prompt: customPrompt,
+            });
+        }
+        catch (error) {
+            logger_1.logger.error('[Custom Prompts] Failed to create prompt', { error });
+            return res.status(500).json({
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to create prompt',
+            });
+        }
+    }
+    /**
+     * PUT /api/custom-prompts/:id
+     * Update a custom prompt
+     */
+    async updatePrompt(req, res) {
+        try {
+            const { id } = req.params;
+            const userId = 'demo-user'; // TODO: Get from auth
+            const { name, description, prompt, tags, isActive } = req.body;
+            // Verify ownership
+            const existing = await prisma.customPrompt.findFirst({
+                where: { id, userId },
+            });
+            if (!existing) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Custom prompt not found',
+                });
+            }
+            const updated = await prisma.customPrompt.update({
+                where: { id },
+                data: {
+                    name,
+                    description,
+                    prompt,
+                    tags,
+                    isActive,
+                },
+            });
+            logger_1.logger.info('[Custom Prompts] Updated prompt', { promptId: id });
+            return res.json({
+                success: true,
+                prompt: updated,
+            });
+        }
+        catch (error) {
+            logger_1.logger.error('[Custom Prompts] Failed to update prompt', { error });
+            return res.status(500).json({
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to update prompt',
+            });
+        }
+    }
+    /**
+     * DELETE /api/custom-prompts/:id
+     * Delete a custom prompt
+     */
+    async deletePrompt(req, res) {
+        try {
+            const { id } = req.params;
+            const userId = 'demo-user'; // TODO: Get from auth
+            // Verify ownership
+            const existing = await prisma.customPrompt.findFirst({
+                where: { id, userId },
+            });
+            if (!existing) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Custom prompt not found',
+                });
+            }
+            await prisma.customPrompt.delete({
+                where: { id },
+            });
+            logger_1.logger.info('[Custom Prompts] Deleted prompt', { promptId: id });
+            return res.json({
+                success: true,
+                message: 'Prompt deleted successfully',
+            });
+        }
+        catch (error) {
+            logger_1.logger.error('[Custom Prompts] Failed to delete prompt', { error });
+            return res.status(500).json({
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to delete prompt',
+            });
+        }
+    }
+    /**
+     * POST /api/custom-prompts/:id/activate
+     * Activate a custom prompt for use
+     */
+    async activatePrompt(req, res) {
+        try {
+            const { id } = req.params;
+            const userId = 'demo-user'; // TODO: Get from auth
+            const prompt = await prisma.customPrompt.findFirst({
+                where: { id, userId },
+            });
+            if (!prompt) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Custom prompt not found',
+                });
+            }
+            // Deactivate all other prompts of the same agent type
+            await prisma.customPrompt.updateMany({
+                where: {
+                    userId,
+                    agentType: prompt.agentType,
+                    isActive: true,
+                },
+                data: {
+                    isActive: false,
+                },
+            });
+            // Activate this prompt
+            const updated = await prisma.customPrompt.update({
+                where: { id },
+                data: {
+                    isActive: true,
+                    usageCount: {
+                        increment: 1,
+                    },
+                },
+            });
+            logger_1.logger.info('[Custom Prompts] Activated prompt', { promptId: id, agentType: prompt.agentType });
+            return res.json({
+                success: true,
+                prompt: updated,
+            });
+        }
+        catch (error) {
+            logger_1.logger.error('[Custom Prompts] Failed to activate prompt', { error });
+            return res.status(500).json({
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to activate prompt',
+            });
+        }
+    }
+}
+exports.CustomPromptsController = CustomPromptsController;
+exports.customPromptsController = new CustomPromptsController();
+//# sourceMappingURL=custom-prompts-controller.js.map
