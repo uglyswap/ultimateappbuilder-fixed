@@ -1,18 +1,20 @@
 import { Router, Request, Response } from 'express';
-import { universalAIClient } from '@/utils/universal-ai-client';
 import { logger } from '@/utils/logger';
 import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 
 const router = Router();
 
+type AIProvider = 'anthropic' | 'openai' | 'openrouter';
+
 /**
- * Simple code generation endpoint for chat interface
+ * Multi-provider code generation endpoint for chat interface
  * POST /api/generate
- * Body: { prompt: string, model?: string }
+ * Body: { prompt: string, model: string, apiKey: string, provider: AIProvider }
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { prompt, model, apiKey } = req.body;
+    const { prompt, model, apiKey, provider } = req.body;
 
     if (!prompt) {
       return res.status(400).json({
@@ -24,32 +26,96 @@ router.post('/', async (req: Request, res: Response) => {
     if (!apiKey) {
       return res.status(400).json({
         status: 'error',
-        message: 'API key is required. Please provide your Anthropic API key.',
+        message: 'API key is required. Please provide your AI provider API key.',
       });
     }
 
-    logger.info('Generating code from prompt with user-provided API key');
+    if (!provider) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Provider is required. Please select an AI provider.',
+      });
+    }
 
-    // Create an Anthropic client with user's API key
-    const anthropic = new Anthropic({
-      apiKey: apiKey,
-    });
+    if (!model) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Model is required. Please select a model.',
+      });
+    }
 
-    // Generate code using Claude
-    const response = await anthropic.messages.create({
-      model: model || 'claude-3-5-sonnet-20241022',
-      max_tokens: 4000,
-      temperature: 0.7,
-      messages: [{
-        role: 'user',
-        content: `You are an expert full-stack developer. Generate clean, production-ready code based on the following request:\n\n${prompt}\n\nProvide only the code without explanations.`
-      }]
-    });
+    logger.info('Generating code from prompt with user-provided API key', { provider, model });
 
-    const generatedCode = response.content[0].type === 'text' ? response.content[0].text : '';
-    const tokensUsed = response.usage.input_tokens + response.usage.output_tokens;
+    const systemPrompt = 'You are an expert full-stack developer. Generate clean, production-ready code based on the following request. Provide only the code without explanations.';
+    let generatedCode = '';
+    let tokensUsed = 0;
+
+    // Route to appropriate provider
+    if (provider === 'anthropic') {
+      const anthropic = new Anthropic({ apiKey });
+
+      const response = await anthropic.messages.create({
+        model: model,
+        max_tokens: 4000,
+        temperature: 0.7,
+        messages: [{
+          role: 'user',
+          content: `${systemPrompt}\n\n${prompt}`
+        }]
+      });
+
+      generatedCode = response.content[0].type === 'text' ? response.content[0].text : '';
+      tokensUsed = response.usage.input_tokens + response.usage.output_tokens;
+
+    } else if (provider === 'openai') {
+      const openai = new OpenAI({ apiKey });
+
+      const response = await openai.chat.completions.create({
+        model: model,
+        max_tokens: 4000,
+        temperature: 0.7,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt }
+        ]
+      });
+
+      generatedCode = response.choices[0]?.message?.content || '';
+      tokensUsed = response.usage?.total_tokens || 0;
+
+    } else if (provider === 'openrouter') {
+      const openai = new OpenAI({
+        apiKey,
+        baseURL: 'https://openrouter.ai/api/v1',
+        defaultHeaders: {
+          'HTTP-Referer': 'https://ultimateappbuilder.ai',
+          'X-Title': 'Ultimate App Builder'
+        }
+      });
+
+      const response = await openai.chat.completions.create({
+        model: model,
+        max_tokens: 4000,
+        temperature: 0.7,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt }
+        ]
+      });
+
+      generatedCode = response.choices[0]?.message?.content || '';
+      tokensUsed = response.usage?.total_tokens || 0;
+
+    } else {
+      return res.status(400).json({
+        status: 'error',
+        message: `Unsupported provider: ${provider}`,
+      });
+    }
 
     logger.info('Code generated successfully', {
+      provider,
+      model,
       tokensUsed,
       contentLength: generatedCode.length,
     });
@@ -59,7 +125,8 @@ router.post('/', async (req: Request, res: Response) => {
       data: {
         code: generatedCode,
         tokensUsed,
-        model: model || 'claude-3-5-sonnet-20241022',
+        model,
+        provider,
       },
     });
   } catch (error) {

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, Code, Eye, Key } from 'lucide-react';
+import { Send, Bot, User, Loader2, Code, Eye, Key, ChevronDown } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -14,32 +14,88 @@ interface ChatInterfaceProps {
   onCodeGenerated?: (code: string) => void;
 }
 
+type AIProvider = 'anthropic' | 'openai' | 'openrouter';
+
+// Up-to-date model lists (January 2025)
+const PROVIDER_MODELS: Record<AIProvider, { value: string; label: string }[]> = {
+  anthropic: [
+    { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet (Latest)' },
+    { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
+    { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
+    { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet' },
+    { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku' },
+  ],
+  openai: [
+    { value: 'gpt-4-turbo-preview', label: 'GPT-4 Turbo' },
+    { value: 'gpt-4-0125-preview', label: 'GPT-4 Turbo (0125)' },
+    { value: 'gpt-4', label: 'GPT-4' },
+    { value: 'gpt-4-32k', label: 'GPT-4 32K' },
+    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
+    { value: 'gpt-3.5-turbo-16k', label: 'GPT-3.5 Turbo 16K' },
+  ],
+  openrouter: [
+    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
+    { value: 'anthropic/claude-3-opus', label: 'Claude 3 Opus' },
+    { value: 'openai/gpt-4-turbo', label: 'GPT-4 Turbo' },
+    { value: 'openai/gpt-4', label: 'GPT-4' },
+    { value: 'google/gemini-pro', label: 'Gemini Pro' },
+    { value: 'meta-llama/llama-3-70b-instruct', label: 'Llama 3 70B' },
+    { value: 'mistralai/mixtral-8x7b-instruct', label: 'Mixtral 8x7B' },
+    { value: 'deepseek/deepseek-coder', label: 'DeepSeek Coder' },
+  ],
+};
+
+const PROVIDER_LABELS: Record<AIProvider, string> = {
+  anthropic: 'Anthropic (Claude)',
+  openai: 'OpenAI (GPT)',
+  openrouter: 'OpenRouter (Multi-Model)',
+};
+
 export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m here to help you build your application. Describe what you want to create, and I\'ll generate the code for you. For example:\n\n"Create a todo list app with React and TypeScript"\n"Build a blog with authentication and comments"\n"Make an e-commerce store with Stripe integration"\n\nNote: You need to provide your Anthropic API key to use this service.',
+      content: 'Hello! I\'m here to help you build your application. Describe what you want to create, and I\'ll generate the code for you.\n\nExamples:\n• "Create a todo list app with React and TypeScript"\n• "Build a blog with authentication and comments"\n• "Make an e-commerce store with Stripe integration"\n\n✨ Choose your AI provider (Anthropic, OpenAI, or OpenRouter), select a model, and provide your API key to get started!',
       timestamp: new Date(),
     },
   ]);
 
   const [input, setInput] = useState('');
+  const [provider, setProvider] = useState<AIProvider>(() => {
+    return (localStorage.getItem('ai-provider') as AIProvider) || 'anthropic';
+  });
+  const [model, setModel] = useState(() => {
+    return localStorage.getItem('ai-model') || PROVIDER_MODELS.anthropic[0].value;
+  });
   const [apiKey, setApiKey] = useState(() => {
-    // Load API key from localStorage if available
-    return localStorage.getItem('anthropic-api-key') || '';
+    return localStorage.getItem('ai-api-key') || '';
   });
   const [showApiKey, setShowApiKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showCode, setShowCode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Save API key to localStorage whenever it changes
+  // Save preferences to localStorage
+  useEffect(() => {
+    localStorage.setItem('ai-provider', provider);
+  }, [provider]);
+
+  useEffect(() => {
+    localStorage.setItem('ai-model', model);
+  }, [model]);
+
   useEffect(() => {
     if (apiKey) {
-      localStorage.setItem('anthropic-api-key', apiKey);
+      localStorage.setItem('ai-api-key', apiKey);
     }
   }, [apiKey]);
+
+  // Update model when provider changes
+  useEffect(() => {
+    const defaultModel = PROVIDER_MODELS[provider][0].value;
+    setModel(defaultModel);
+  }, [provider]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -53,12 +109,11 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    // Check if API key is provided
     if (!apiKey.trim()) {
       const errorMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: 'Please provide your Anthropic API key in the field above to use this service.',
+        content: 'Please provide your AI provider API key in the field above to use this service.',
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -77,7 +132,6 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
     setIsLoading(true);
 
     try {
-      // Call the real backend API - use relative URL for same-origin requests
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -85,13 +139,15 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
         },
         body: JSON.stringify({
           prompt: userMessage.content,
-          model: undefined, // Will use default model
-          apiKey: apiKey, // Send user's API key
+          model,
+          apiKey,
+          provider,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
@@ -99,7 +155,7 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `I've generated the code for: "${userMessage.content}". Here's what I created:`,
+        content: `I've generated the code for: "${userMessage.content}". Here's what I created using ${PROVIDER_LABELS[provider]} - ${model}:`,
         timestamp: new Date(),
         code: result.data.code,
       };
@@ -113,7 +169,7 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please make sure the backend API is running and accessible.`,
+        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your API key and make sure the backend is running.`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -131,7 +187,7 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
             <Bot className="w-8 h-8 text-purple-600" />
             <div>
               <h3 className="font-bold text-gray-900">AI Assistant</h3>
-              <p className="text-sm text-gray-500">Build anything with conversation</p>
+              <p className="text-sm text-gray-500">Multi-provider code generation</p>
             </div>
           </div>
           <button
@@ -156,6 +212,49 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
           </button>
         </div>
 
+        {/* Provider and Model Selection */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              AI Provider
+            </label>
+            <div className="relative">
+              <select
+                value={provider}
+                onChange={(e) => setProvider(e.target.value as AIProvider)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none bg-white pr-8"
+              >
+                {Object.entries(PROVIDER_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Model
+            </label>
+            <div className="relative">
+              <select
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none bg-white pr-8"
+              >
+                {PROVIDER_MODELS[provider].map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+        </div>
+
         {/* API Key Input */}
         <div className="flex items-center gap-2">
           <Key className="w-4 h-4 text-gray-400" />
@@ -164,7 +263,7 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
               type={showApiKey ? 'text' : 'password'}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your Anthropic API key (sk-ant-...)"
+              placeholder={`Enter your ${PROVIDER_LABELS[provider]} API key...`}
               className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
             <button
@@ -172,11 +271,7 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
               className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50"
               title={showApiKey ? 'Hide API key' : 'Show API key'}
             >
-              {showApiKey ? (
-                <Eye className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
+              <Eye className="w-4 h-4" />
             </button>
           </div>
         </div>
