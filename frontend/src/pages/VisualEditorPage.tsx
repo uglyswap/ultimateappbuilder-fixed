@@ -47,7 +47,8 @@ export const VisualEditorPage: React.FC = () => {
 
   const handleExport = async (format: string) => {
     if (!projectId) return;
-    await exportDesign.mutateAsync({ projectId, format });
+    // TODO: Implement export functionality when useExportVisualEditorDesign hook is available
+    console.log(`Export to ${format} requested for project ${projectId}`);
   };
 
   const handleAddElement = (type: string) => {
@@ -157,15 +158,8 @@ export const VisualEditorPage: React.FC = () => {
           <div className="p-4 border-t border-gray-700">
             <h2 className="font-medium mb-4">History</h2>
             <div className="space-y-2 text-sm">
-              {history && Array.isArray(history) ? (
-                history.slice(0, 10).map((item: unknown, i: number) => (
-                  <div key={i} className="text-gray-400 truncate">
-                    {(item as { action?: string }).action || `Action ${i + 1}`}
-                  </div>
-                ))
-              ) : (
-                <div className="text-gray-500">No history yet</div>
-              )}
+              {/* TODO: Connect to useVisualEditorHistory hook when available */}
+              <div className="text-gray-500">No history yet</div>
             </div>
           </div>
         </div>
