@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Sparkles, Code2, Wand2, X, Download, Github, Globe,
   Rocket, Eye, Loader2, CheckCircle, AlertCircle,
@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { ChatInterface } from '../components/ChatInterface';
 import { SandpackPreview } from '../components/SandpackPreview';
+import { GitHubConnect } from '../components/GitHubConnect';
 import type { GeneratedFile, AgentStatus, AgentType } from '../types';
 import * as monaco from 'monaco-editor';
 
@@ -471,7 +472,21 @@ export function FromScratchPage() {
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel - Chat Interface */}
           <div className="w-1/3 border-r border-gray-700 flex flex-col">
-            <ChatInterface onCodeGenerated={handleCodeGenerated} />
+            {/* GitHub Connect */}
+            <div className="p-4 border-b border-gray-700">
+              <GitHubConnect
+                onFilesLoaded={(files) => {
+                  setGeneratedFiles(files);
+                  setActiveFileIndex(0);
+                }}
+                githubToken={githubToken}
+              />
+            </div>
+
+            {/* Chat Interface */}
+            <div className="flex-1 overflow-hidden">
+              <ChatInterface onCodeGenerated={handleCodeGenerated} />
+            </div>
           </div>
 
           {/* Right Panel - Code/Preview/Agents/Deploy */}

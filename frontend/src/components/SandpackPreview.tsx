@@ -6,12 +6,8 @@ import {
   SandpackPreview as SandpackPreviewPane,
   SandpackConsole,
 } from '@codesandbox/sandpack-react';
-import { Monitor, Code2, Terminal, AlertCircle } from 'lucide-react';
-
-interface GeneratedFile {
-  path: string;
-  content: string;
-}
+import { Monitor } from 'lucide-react';
+import type { GeneratedFile } from '../types';
 
 interface SandpackPreviewProps {
   files: GeneratedFile[];

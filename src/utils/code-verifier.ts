@@ -21,16 +21,30 @@ export function verifyAndCleanCode(rawOutput: string): VerifiedCode {
   const errors: string[] = [];
   let cleanedContent = rawOutput;
 
-  // Remove common AI prefixes/suffixes
+  // Remove common AI prefixes/suffixes (multi-language support)
   const prefixPatterns = [
-    /^(I'll |I will |Let me |Here's |Here is |I've created |I have created |Je vais |Voici ).*?\n+/i,
-    /^.*?(creating|building|generating|making).*?\n+/i,
-    /^(Sure|Of course|Certainly|Absolutely).*?\n+/i,
+    // English
+    /^(I'll |I will |Let me |Here's |Here is |I've created |I have created |Below is |Following is ).*?\n+/i,
+    /^.*?(creating|building|generating|making|implementing).*?\n+/i,
+    /^(Sure|Of course|Certainly|Absolutely|Great|Perfect|Alright).*?\n+/i,
+    /^(Here's? (the|a|an|your)).*?\n+/i,
+    // French
+    /^(Je vais |Voici |Voilà |Créons |J'ai créé ).*?\n+/i,
+    // Spanish
+    /^(Voy a |Aquí está |He creado |Crearemos ).*?\n+/i,
+    // German
+    /^(Ich werde |Hier ist |Lass mich ).*?\n+/i,
+    // Common patterns
+    /^(Based on your request|As requested|As you asked).*?\n+/i,
+    /^(The following|Below you'll find).*?\n+/i,
   ];
 
   for (const pattern of prefixPatterns) {
     cleanedContent = cleanedContent.replace(pattern, '');
   }
+
+  // Remove any remaining conversational text at the start
+  cleanedContent = cleanedContent.replace(/^[^\/\n<{]*?:\s*\n+/i, '');
 
   // Remove markdown code block markers
   cleanedContent = cleanedContent.replace(/```[\w]*\n?/g, '');
@@ -40,12 +54,20 @@ export function verifyAndCleanCode(rawOutput: string): VerifiedCode {
   const trailingPatterns = [
     /\n\n(This code|The code|This implementation|This creates|Note:|Notes:|Important:)[\s\S]*$/i,
     /\n\n(Key features|Features:|What this does|How it works|Usage:)[\s\S]*$/i,
-    /\n\n(You can|To use|To run|Install|Setup:)[\s\S]*$/i,
+    /\n\n(You can|To use|To run|Install|Setup:|Getting started)[\s\S]*$/i,
+    /\n\n(Let me know|Feel free|If you need|I hope|Happy coding)[\s\S]*$/i,
+    /\n\n(Remember to|Don't forget|Make sure|Please note)[\s\S]*$/i,
+    /\n\n(Ce code|Cette implémentation|Notez que|N'oubliez pas)[\s\S]*$/i,
+    /\n\n(Este código|Recuerda|No olvides)[\s\S]*$/i,
+    /\n\n---[\s\S]*$/,
   ];
 
   for (const pattern of trailingPatterns) {
     cleanedContent = cleanedContent.replace(pattern, '');
   }
+
+  // Trim whitespace
+  cleanedContent = cleanedContent.trim();
 
   // Extract multiple files if present
   const files: Array<{ path: string; content: string }> = [];

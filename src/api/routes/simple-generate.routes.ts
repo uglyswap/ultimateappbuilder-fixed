@@ -231,9 +231,39 @@ Generate complete, runnable code. The user expects a full project they can immed
   } catch (error) {
     logger.error('Code generation failed', { error });
 
-    return res.status(500).json({
+    // Provide specific error messages for common issues
+    let errorMessage = 'Code generation failed';
+    let statusCode = 500;
+
+    if (error instanceof Error) {
+      const errorMsg = error.message.toLowerCase();
+
+      if (errorMsg.includes('invalid api key') || errorMsg.includes('invalid_api_key') || errorMsg.includes('authentication')) {
+        errorMessage = 'Invalid API key. Please check your API key and try again.';
+        statusCode = 401;
+      } else if (errorMsg.includes('rate limit') || errorMsg.includes('rate_limit') || errorMsg.includes('too many requests')) {
+        errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+        statusCode = 429;
+      } else if (errorMsg.includes('insufficient') || errorMsg.includes('quota') || errorMsg.includes('credits')) {
+        errorMessage = 'Insufficient credits or quota. Please check your account balance.';
+        statusCode = 402;
+      } else if (errorMsg.includes('model not found') || errorMsg.includes('invalid model')) {
+        errorMessage = `Model not available. Please select a different model.`;
+        statusCode = 400;
+      } else if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
+        errorMessage = 'Request timed out. Please try again with a simpler prompt.';
+        statusCode = 504;
+      } else if (errorMsg.includes('context length') || errorMsg.includes('too long')) {
+        errorMessage = 'Prompt too long. Please reduce the length of your request.';
+        statusCode = 400;
+      } else {
+        errorMessage = `AI generation failed: ${error.message}`;
+      }
+    }
+
+    return res.status(statusCode).json({
       status: 'error',
-      message: error instanceof Error ? `AI generation failed: ${error.message}` : 'Code generation failed',
+      message: errorMessage,
     });
   }
 });
