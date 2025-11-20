@@ -30,10 +30,25 @@ export class JobQueueService {
   private deploymentWorker?: Worker<DeploymentJob>;
 
   constructor() {
-    const connection = {
-      host: config.redis.url.includes('://') ? new URL(config.redis.url).hostname : 'localhost',
-      port: config.redis.url.includes('://') ? parseInt(new URL(config.redis.url).port || '6379') : 6379,
+    // Parse Redis URL properly including password support
+    const parseRedisUrl = (url: string) => {
+      try {
+        if (url.includes('://')) {
+          const parsed = new URL(url);
+          return {
+            host: parsed.hostname || 'localhost',
+            port: parseInt(parsed.port || '6379'),
+            password: parsed.password || undefined,
+            username: parsed.username || undefined,
+          };
+        }
+      } catch (e) {
+        logger.warn('[JobQueue] Failed to parse Redis URL, using defaults');
+      }
+      return { host: 'localhost', port: 6379 };
     };
+
+    const connection = parseRedisUrl(config.redis.url);
 
     // Initialize queues
     this.generationQueue = new Queue<ProjectGenerationJob>('project-generation', {
@@ -77,10 +92,25 @@ export class JobQueueService {
    * Start workers to process jobs
    */
   async startWorkers() {
-    const connection = {
-      host: config.redis.url.includes('://') ? new URL(config.redis.url).hostname : 'localhost',
-      port: config.redis.url.includes('://') ? parseInt(new URL(config.redis.url).port || '6379') : 6379,
+    // Parse Redis URL properly including password support
+    const parseRedisUrl = (url: string) => {
+      try {
+        if (url.includes('://')) {
+          const parsed = new URL(url);
+          return {
+            host: parsed.hostname || 'localhost',
+            port: parseInt(parsed.port || '6379'),
+            password: parsed.password || undefined,
+            username: parsed.username || undefined,
+          };
+        }
+      } catch (e) {
+        logger.warn('[JobQueue] Failed to parse Redis URL, using defaults');
+      }
+      return { host: 'localhost', port: 6379 };
     };
+
+    const connection = parseRedisUrl(config.redis.url);
 
     // Generation worker
     this.generationWorker = new Worker<ProjectGenerationJob>(

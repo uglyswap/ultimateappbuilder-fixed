@@ -28,7 +28,7 @@ export const config = {
   ai: {
     provider: (process.env.AI_PROVIDER || 'anthropic') as 'anthropic' | 'openai' | 'openrouter',
     model: process.env.AI_MODEL || 'claude-3-5-sonnet-20241022',
-    maxTokens: parseInt(process.env.AI_MAX_TOKENS || '8000', 10),
+    maxTokens: parseInt(process.env.AI_MAX_TOKENS || '16000', 10), // Increased to avoid truncation
     temperature: parseFloat(process.env.AI_TEMPERATURE || '0.7'),
     apiKey: process.env.ANTHROPIC_API_KEY || '',
   } as AIConfig,

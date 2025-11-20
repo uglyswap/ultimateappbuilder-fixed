@@ -7,14 +7,28 @@ const router = Router();
 
 type AIProvider = 'anthropic' | 'openai' | 'openrouter';
 
+// In-memory conversation storage (for simplicity - in production use Redis/DB)
+const conversationStore = new Map<string, Array<{ role: string; content: string }>>();
+
+// Clean old conversations every hour
+setInterval(() => {
+  const oneHourAgo = Date.now() - 3600000;
+  conversationStore.forEach((_, key) => {
+    const timestamp = parseInt(key.split('_')[1] || '0');
+    if (timestamp < oneHourAgo) {
+      conversationStore.delete(key);
+    }
+  });
+}, 3600000);
+
 /**
  * Multi-provider code generation endpoint for chat interface
  * POST /api/generate
- * Body: { prompt: string, model: string, apiKey: string, provider: AIProvider }
+ * Body: { prompt: string, model: string, apiKey: string, provider: AIProvider, conversationId?: string }
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { prompt, model, apiKey, provider } = req.body;
+    const { prompt, model, apiKey, provider, conversationId, messages: clientMessages } = req.body;
 
     if (!prompt) {
       return res.status(400).json({
@@ -44,24 +58,54 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
-    logger.info('Generating code from prompt with user-provided API key', { provider, model });
+    logger.info('Generating code from prompt with user-provided API key', { provider, model, conversationId });
 
-    const systemPrompt = 'You are an expert full-stack developer. Generate clean, production-ready code based on the following request. Provide only the code without explanations.';
+    // Enhanced system prompt for better code generation
+    const systemPrompt = `You are an expert full-stack developer and software architect. You specialize in building production-ready applications with modern best practices.
+
+When generating code:
+- Write clean, maintainable, and well-documented code
+- Use TypeScript with strict typing when applicable
+- Follow SOLID principles and design patterns
+- Include proper error handling and validation
+- Add helpful comments for complex logic
+- Use modern frameworks and libraries (Next.js 14, React 18, Tailwind CSS, Prisma, etc.)
+- Implement security best practices
+- Make the code production-ready
+
+Always provide COMPLETE code files - never truncate or use placeholders like "// rest of the code". If the code is long, structure it properly but include everything.`;
+
     let generatedCode = '';
     let tokensUsed = 0;
+
+    // Handle conversation history
+    let convId = conversationId || `conv_${Date.now()}`;
+    let messageHistory = conversationStore.get(convId) || [];
+
+    // If client sends message history, use it
+    if (clientMessages && Array.isArray(clientMessages)) {
+      messageHistory = clientMessages;
+    }
+
+    // Add the new user message
+    messageHistory.push({ role: 'user', content: prompt });
 
     // Route to appropriate provider
     if (provider === 'anthropic') {
       const anthropic = new Anthropic({ apiKey });
 
+      // Prepare messages for Anthropic
+      const anthropicMessages = messageHistory.map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content
+      }));
+
       const response = await anthropic.messages.create({
         model: model,
-        max_tokens: 4000,
+        max_tokens: 16000, // Increased to avoid truncation
         temperature: 0.7,
-        messages: [{
-          role: 'user',
-          content: `${systemPrompt}\n\n${prompt}`
-        }]
+        system: systemPrompt,
+        messages: anthropicMessages
       });
 
       generatedCode = response.content[0].type === 'text' ? response.content[0].text : '';
@@ -70,14 +114,20 @@ router.post('/', async (req: Request, res: Response) => {
     } else if (provider === 'openai') {
       const openai = new OpenAI({ apiKey });
 
+      // Prepare messages for OpenAI
+      const openaiMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+        { role: 'system', content: systemPrompt },
+        ...messageHistory.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content
+        }))
+      ];
+
       const response = await openai.chat.completions.create({
         model: model,
-        max_tokens: 4000,
+        max_tokens: 16000, // Increased to avoid truncation
         temperature: 0.7,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: prompt }
-        ]
+        messages: openaiMessages
       });
 
       generatedCode = response.choices[0]?.message?.content || '';
@@ -93,14 +143,20 @@ router.post('/', async (req: Request, res: Response) => {
         }
       });
 
+      // Prepare messages for OpenRouter
+      const openrouterMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+        { role: 'system', content: systemPrompt },
+        ...messageHistory.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content
+        }))
+      ];
+
       const response = await openai.chat.completions.create({
         model: model,
-        max_tokens: 4000,
+        max_tokens: 16000, // Increased to avoid truncation
         temperature: 0.7,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: prompt }
-        ]
+        messages: openrouterMessages
       });
 
       generatedCode = response.choices[0]?.message?.content || '';
@@ -113,11 +169,17 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
+    // Store assistant response in conversation history
+    messageHistory.push({ role: 'assistant', content: generatedCode });
+    conversationStore.set(convId, messageHistory);
+
     logger.info('Code generated successfully', {
       provider,
       model,
       tokensUsed,
       contentLength: generatedCode.length,
+      conversationId: convId,
+      messageCount: messageHistory.length,
     });
 
     return res.json({
@@ -127,6 +189,7 @@ router.post('/', async (req: Request, res: Response) => {
         tokensUsed,
         model,
         provider,
+        conversationId: convId,
       },
     });
   } catch (error) {

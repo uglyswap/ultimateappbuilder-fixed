@@ -18,6 +18,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { api } from '../services/api';
+import { websocket } from '../services/websocket';
 import { CodeEditor } from '../components/CodeEditor';
 import { LivePreview } from '../components/LivePreview';
 import { FileExplorer } from '../components/FileExplorer';
@@ -47,31 +48,89 @@ export function ProjectDetailPage() {
     },
   });
 
-  // Mock agent statuses (in real app, comes from WebSocket)
+  // Agent statuses - connected to WebSocket
   const [agentStatuses, setAgentStatuses] = useState<AgentStatus[]>([
-    { name: 'Database Agent', status: 'completed', progress: 100 },
-    { name: 'Backend Agent', status: 'running', progress: 65 },
+    { name: 'Orchestrator', status: 'pending', progress: 0 },
+    { name: 'Database Agent', status: 'pending', progress: 0 },
+    { name: 'Backend Agent', status: 'pending', progress: 0 },
     { name: 'Frontend Agent', status: 'pending', progress: 0 },
     { name: 'Auth Agent', status: 'pending', progress: 0 },
     { name: 'DevOps Agent', status: 'pending', progress: 0 },
   ]);
 
+  const [generationLogs, setGenerationLogs] = useState<string[]>([]);
+
+  // Connect to WebSocket for real-time updates
   useEffect(() => {
-    if (project?.status === 'generating') {
-      // Simulate progress updates (replace with real WebSocket)
-      const interval = setInterval(() => {
+    if (!id) return;
+
+    // Subscribe to project events
+    const unsubscribe = websocket.subscribeToProject(id, {
+      onProgress: (payload) => {
+        // Update agent status based on progress
+        if (payload.currentAgent) {
+          setAgentStatuses((prev) =>
+            prev.map((agent) => {
+              const agentName = payload.currentAgent?.toLowerCase();
+              if (agent.name.toLowerCase().includes(agentName || '')) {
+                return {
+                  ...agent,
+                  status: 'running',
+                  progress: payload.progress,
+                };
+              }
+              // Mark previous agents as completed
+              if (prev.indexOf(agent) < prev.findIndex(a =>
+                a.name.toLowerCase().includes(agentName || '')
+              )) {
+                return { ...agent, status: 'completed', progress: 100 };
+              }
+              return agent;
+            })
+          );
+        }
+
+        // Add log message
+        if (payload.message) {
+          setGenerationLogs((prev) => [...prev.slice(-99), payload.message]);
+        }
+      },
+      onAgentUpdate: (payload) => {
         setAgentStatuses((prev) =>
           prev.map((agent) => {
-            if (agent.status === 'running' && agent.progress < 100) {
-              return { ...agent, progress: Math.min(agent.progress + 5, 100) };
+            if (agent.name.toLowerCase().includes(payload.agent.type.toLowerCase())) {
+              return {
+                ...agent,
+                status: payload.agent.status as AgentStatus['status'],
+                progress: payload.agent.progress,
+              };
             }
             return agent;
           })
         );
-      }, 500);
-      return () => clearInterval(interval);
-    }
-  }, [project?.status]);
+      },
+      onCompleted: () => {
+        setAgentStatuses((prev) =>
+          prev.map((agent) => ({
+            ...agent,
+            status: 'completed',
+            progress: 100,
+          }))
+        );
+        toast.success('Project generation completed!');
+      },
+      onFailed: (error) => {
+        toast.error(`Generation failed: ${error}`);
+      },
+    });
+
+    // Connect WebSocket if not already connected
+    websocket.connect();
+
+    return () => {
+      unsubscribe();
+    };
+  }, [id]);
 
   const handleFileSelect = (file: GeneratedFile) => {
     setSelectedFile(file);
@@ -105,10 +164,100 @@ export function ProjectDetailPage() {
   };
 
   const handlePreview = () => {
-    // In real app, start dev server and get URL
-    setPreviewUrl('http://localhost:5173');
+    // Generate preview from generated files
+    if (!project?.generatedFiles?.length) {
+      toast.error('No files to preview yet');
+      return;
+    }
+
+    // Find index.html or main component
+    const indexHtml = project.generatedFiles.find(
+      f => f.path.endsWith('index.html') || f.path.includes('index.html')
+    );
+
+    const mainTsx = project.generatedFiles.find(
+      f => f.path.endsWith('page.tsx') || f.path.endsWith('App.tsx') || f.path.endsWith('index.tsx')
+    );
+
+    if (indexHtml) {
+      // Create a blob URL from the HTML content
+      const blob = new Blob([indexHtml.content], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+    } else if (mainTsx) {
+      // Create a simple HTML wrapper for React component
+      const htmlWrapper = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview - ${project.name}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; }
+    .code-preview { padding: 20px; max-width: 1200px; margin: 0 auto; }
+    pre { background: #f5f5f5; padding: 16px; border-radius: 8px; overflow-x: auto; }
+    code { font-family: 'Fira Code', monospace; font-size: 14px; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="code-preview">
+    <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+      <h1 class="text-xl font-bold text-blue-800">Generated Code Preview</h1>
+      <p class="text-blue-600 text-sm mt-1">This is a static preview of your generated code. For a live preview, download and run the project locally.</p>
+    </div>
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h2 class="text-lg font-semibold mb-4">${mainTsx.path}</h2>
+      <pre><code>${mainTsx.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>
+    </div>
+  </div>
+</body>
+</html>`;
+      const blob = new Blob([htmlWrapper], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+    } else {
+      // Create a preview of all files
+      const filesPreview = project.generatedFiles.map(f => `
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <h2 class="text-lg font-semibold mb-4">${f.path}</h2>
+          <pre><code>${f.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>
+        </div>
+      `).join('');
+
+      const htmlWrapper = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview - ${project.name}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; }
+    .code-preview { padding: 20px; max-width: 1200px; margin: 0 auto; }
+    pre { background: #f5f5f5; padding: 16px; border-radius: 8px; overflow-x: auto; max-height: 400px; }
+    code { font-family: 'Fira Code', monospace; font-size: 12px; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="code-preview">
+    <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+      <h1 class="text-xl font-bold text-blue-800">Generated Code Preview - ${project.name}</h1>
+      <p class="text-blue-600 text-sm mt-1">Preview of ${project.generatedFiles.length} generated files</p>
+    </div>
+    ${filesPreview}
+  </div>
+</body>
+</html>`;
+      const blob = new Blob([htmlWrapper], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+    }
+
     setActiveTab('preview');
-    toast.success('Preview server started!');
+    toast.success('Preview generated!');
   };
 
   if (isLoading) {

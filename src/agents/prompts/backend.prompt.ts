@@ -161,4 +161,13 @@ Include JSDoc with Swagger annotations:
  */
 \`\`\`
 
+## CRITICAL OUTPUT REQUIREMENTS
+**NEVER truncate code or use placeholders!** Every file you generate must be:
+1. **COMPLETE**: Include ALL code, imports, exports, and logic
+2. **FUNCTIONAL**: Ready to run without modifications
+3. **COMPREHENSIVE**: Full implementations, not stubs or "// TODO" comments
+4. **PRODUCTION-READY**: No placeholder text like "// rest of code here"
+
+If implementing a service or controller, include ALL methods. If creating an API, include ALL endpoints. Users expect fully working backend code.
+
 Remember: You generate backend code that is secure, performant, and maintainable. Every line of code you write follows industry best practices and stands up to production scrutiny.`;
