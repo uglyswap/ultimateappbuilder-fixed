@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Sparkles, Code2, Wand2, X, Download, Github, Globe,
-  Rocket, RefreshCw, Eye, Loader2, CheckCircle, AlertCircle,
-  Play, Terminal, FileCode, FolderTree, Monitor, Smartphone, Tablet,
+  Rocket, Eye, Loader2, CheckCircle, AlertCircle,
+  Play, Terminal, FileCode, FolderTree,
   Cloud, Server, Database, ExternalLink
 } from 'lucide-react';
 import { ChatInterface } from '../components/ChatInterface';
@@ -33,7 +33,6 @@ const AGENT_CONFIG: Record<string, { icon: string; color: string; label: string 
 };
 
 type ViewMode = 'code' | 'preview' | 'agents' | 'deploy';
-type DeviceType = 'desktop' | 'tablet' | 'mobile';
 
 export function FromScratchPage() {
   // Files state - multiple files with tabs
@@ -47,10 +46,6 @@ export function FromScratchPage() {
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationLogs, setGenerationLogs] = useState<string[]>([]);
 
-  // Preview state
-  const [previewDevice, setPreviewDevice] = useState<DeviceType>('desktop');
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Deployment state
   const [githubRepo, setGithubRepo] = useState('');
@@ -407,56 +402,6 @@ export function FromScratchPage() {
     } finally {
       setIsDeploying(false);
     }
-  };
-
-  // Generate preview HTML
-  const generatePreviewHtml = () => {
-    // Find main React component
-    const mainFile = generatedFiles.find(f =>
-      f.path.includes('App.tsx') || f.path.includes('App.jsx') ||
-      f.path.includes('index.tsx') || f.path.includes('index.jsx')
-    );
-
-    if (!mainFile) return null;
-
-    // Basic HTML template with React
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-          <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-          <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-          <script src="https://cdn.tailwindcss.com"></script>
-          <style>
-            body { margin: 0; font-family: system-ui, sans-serif; }
-          </style>
-        </head>
-        <body>
-          <div id="root"></div>
-          <script type="text/babel">
-            ${mainFile.content
-              .replace(/import\s+.*from\s+['"].*['"];?\n?/g, '')
-              .replace(/export\s+default\s+/g, 'const App = ')
-              .replace(/export\s+\{[^}]*\};?\n?/g, '')}
-
-            const root = ReactDOM.createRoot(document.getElementById('root'));
-            root.render(<App />);
-          </script>
-        </body>
-      </html>
-    `;
-
-    return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
-  };
-
-  // Device sizes for preview
-  const deviceSizes = {
-    desktop: { width: '100%', height: '100%' },
-    tablet: { width: '768px', height: '1024px' },
-    mobile: { width: '375px', height: '667px' },
   };
 
   return (
