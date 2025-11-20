@@ -121,17 +121,31 @@ export function FromScratchPage() {
 
   // Update editor when active file changes
   useEffect(() => {
-    if (monacoEditorRef.current && generatedFiles[activeFileIndex]) {
-      const file = generatedFiles[activeFileIndex];
-      const language = getLanguageFromPath(file.path);
-      const model = monacoEditorRef.current.getModel();
+    if (monacoEditorRef.current && generatedFiles.length > 0) {
+      const safeIndex = Math.min(activeFileIndex, generatedFiles.length - 1);
+      const file = generatedFiles[safeIndex];
 
-      if (model) {
-        monaco.editor.setModelLanguage(model, language);
-        monacoEditorRef.current.setValue(file.content);
+      if (file) {
+        const language = getLanguageFromPath(file.path);
+        const model = monacoEditorRef.current.getModel();
+
+        if (model) {
+          monaco.editor.setModelLanguage(model, language);
+          // Only update if content differs to avoid cursor reset
+          if (monacoEditorRef.current.getValue() !== file.content) {
+            monacoEditorRef.current.setValue(file.content);
+          }
+        }
       }
     }
   }, [activeFileIndex, generatedFiles]);
+
+  // Handle tab click with proper index management
+  const handleTabClick = (index: number) => {
+    if (index >= 0 && index < generatedFiles.length) {
+      setActiveFileIndex(index);
+    }
+  };
 
   // Connect to WebSocket for real-time updates
   useEffect(() => {
@@ -307,20 +321,34 @@ export function FromScratchPage() {
       const response = await fetch('/api/projects/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: generatedFiles }),
+        body: JSON.stringify({
+          files: generatedFiles,
+          projectName: 'generated-project'
+        }),
       });
 
       if (!response.ok) throw new Error('Download failed');
 
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // Create blob with explicit MIME type
+      const zipBlob = new Blob([blob], { type: 'application/zip' });
+      const url = window.URL.createObjectURL(zipBlob);
+
+      // Create download link
       const a = document.createElement('a');
+      a.style.display = 'none';
       a.href = url;
       a.download = 'generated-project.zip';
+      a.setAttribute('rel', 'noopener');
+
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 100);
     } catch (error) {
       console.error('Download error:', error);
       alert('Failed to download project');
@@ -400,6 +428,84 @@ export function FromScratchPage() {
       console.error('Vercel deployment error:', error);
       setDeploymentStatus('error');
       alert(`Vercel deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsDeploying(false);
+    }
+  };
+
+  // Deploy to Netlify
+  const handleDeployToNetlify = async () => {
+    if (!netlifyToken || generatedFiles.length === 0) {
+      alert('Please provide Netlify token and generate code first');
+      return;
+    }
+
+    setIsDeploying(true);
+    setDeploymentStatus('idle');
+
+    try {
+      const response = await fetch('/api/deployment/deploy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: 'netlify',
+          token: netlifyToken,
+          files: generatedFiles,
+          projectName: `app-${Date.now()}`,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Netlify deployment failed');
+      }
+
+      const result = await response.json();
+      setDeploymentStatus('success');
+      setDeploymentUrl(result.data.url);
+    } catch (error) {
+      console.error('Netlify deployment error:', error);
+      setDeploymentStatus('error');
+      alert(`Netlify deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsDeploying(false);
+    }
+  };
+
+  // Deploy to Railway
+  const handleDeployToRailway = async () => {
+    if (!railwayToken || generatedFiles.length === 0) {
+      alert('Please provide Railway token and generate code first');
+      return;
+    }
+
+    setIsDeploying(true);
+    setDeploymentStatus('idle');
+
+    try {
+      const response = await fetch('/api/deployment/deploy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: 'railway',
+          token: railwayToken,
+          files: generatedFiles,
+          projectName: `app-${Date.now()}`,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Railway deployment failed');
+      }
+
+      const result = await response.json();
+      setDeploymentStatus('success');
+      setDeploymentUrl(result.data.url);
+    } catch (error) {
+      console.error('Railway deployment error:', error);
+      setDeploymentStatus('error');
+      alert(`Railway deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsDeploying(false);
     }
@@ -549,10 +655,10 @@ export function FromScratchPage() {
                 {generatedFiles.length > 0 && (
                   <div className="bg-gray-900 border-b border-gray-700 flex overflow-x-auto">
                     {generatedFiles.map((file, index) => (
-                      <button
-                        key={file.path}
-                        onClick={() => setActiveFileIndex(index)}
-                        className={`flex items-center gap-2 px-4 py-2 text-sm border-r border-gray-700 whitespace-nowrap ${
+                      <div
+                        key={`${file.path}-${index}`}
+                        onClick={() => handleTabClick(index)}
+                        className={`flex items-center gap-2 px-4 py-2 text-sm border-r border-gray-700 whitespace-nowrap cursor-pointer ${
                           index === activeFileIndex
                             ? 'bg-gray-800 text-white'
                             : 'text-gray-400 hover:text-white hover:bg-gray-800'
@@ -566,7 +672,7 @@ export function FromScratchPage() {
                         >
                           <X className="w-3 h-3" />
                         </button>
-                      </button>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -806,6 +912,7 @@ export function FromScratchPage() {
                         />
                       </div>
                       <button
+                        onClick={handleDeployToNetlify}
                         disabled={isDeploying || !netlifyToken || generatedFiles.length === 0}
                         className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
                           isDeploying || !netlifyToken || generatedFiles.length === 0
@@ -839,6 +946,7 @@ export function FromScratchPage() {
                         />
                       </div>
                       <button
+                        onClick={handleDeployToRailway}
                         disabled={isDeploying || !railwayToken || generatedFiles.length === 0}
                         className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
                           isDeploying || !railwayToken || generatedFiles.length === 0

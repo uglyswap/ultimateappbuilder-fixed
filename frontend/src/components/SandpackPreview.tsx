@@ -26,7 +26,9 @@ export function SandpackPreview({
 
     files.forEach((file) => {
       // Ensure path starts with /
-      const path = file.path.startsWith('/') ? file.path : `/${file.path}`;
+      let path = file.path.startsWith('/') ? file.path : `/${file.path}`;
+      // Clean up the path
+      path = path.replace(/\/+/g, '/');
       result[path] = file.content;
     });
 
@@ -36,25 +38,54 @@ export function SandpackPreview({
 
     // If no entry point, create a wrapper
     if (!hasApp && !hasIndex) {
-      // Find main component file
+      // Find main component file (prefer files in root or src directory)
       const mainFile = files.find(f =>
+        (f.path.endsWith('.tsx') || f.path.endsWith('.jsx')) &&
+        !f.path.includes('node_modules') &&
+        !f.path.includes('test')
+      ) || files.find(f =>
         f.path.endsWith('.tsx') || f.path.endsWith('.jsx')
       );
 
       if (mainFile) {
-        const componentName = mainFile.path
-          .replace(/^.*[\\/]/, '')
-          .replace(/\.(tsx|jsx)$/, '');
+        // Extract component name from file
+        const fileName = mainFile.path.replace(/^.*[\\/]/, '').replace(/\.(tsx|jsx)$/, '');
+        // PascalCase the component name
+        const componentName = fileName.charAt(0).toUpperCase() + fileName.slice(1);
 
-        const importPath = mainFile.path.startsWith('/')
+        let importPath = mainFile.path.startsWith('/')
           ? mainFile.path.replace(/\.(tsx|jsx)$/, '')
           : `/${mainFile.path.replace(/\.(tsx|jsx)$/, '')}`;
 
-        result['/App.tsx'] = `import ${componentName} from '${importPath}';\n\nexport default function App() {\n  return <${componentName} />;\n}`;
+        // Clean import path
+        importPath = importPath.replace(/\/+/g, '/');
+
+        result['/App.tsx'] = `import ${componentName} from '${importPath}';
+
+export default function App() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <${componentName} />
+    </div>
+  );
+}`;
       } else {
         // Create a default component showing the files
-        const fileList = files.map(f => f.path).join('\\n');
-        result['/App.tsx'] = `export default function App() {\n  return (\n    <div className="p-4">\n      <h1 className="text-xl font-bold mb-4">Generated Files</h1>\n      <pre className="bg-gray-100 p-4 rounded">${fileList}</pre>\n    </div>\n  );\n}`;
+        const fileList = files.map(f => `• ${f.path}`).join('\n');
+        result['/App.tsx'] = `export default function App() {
+  return (
+    <div className="p-8 max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">Generated Files</h1>
+      <div className="bg-white p-4 rounded-lg shadow border">
+        <pre className="text-sm text-gray-600 whitespace-pre-wrap">${fileList}</pre>
+      </div>
+      <p className="mt-4 text-sm text-gray-500">
+        These files may not have a React entry point.
+        Check the Code tab for the full content.
+      </p>
+    </div>
+  );
+}`;
       }
     }
 
@@ -105,6 +136,12 @@ export function SandpackPreview({
             'react': '^18.2.0',
             'react-dom': '^18.2.0',
             'lucide-react': '^0.356.0',
+            '@tanstack/react-query': '^5.0.0',
+            'zustand': '^4.5.0',
+            'axios': '^1.6.0',
+            'date-fns': '^3.0.0',
+            'clsx': '^2.1.0',
+            'tailwind-merge': '^2.2.0',
           },
         }}
       >
