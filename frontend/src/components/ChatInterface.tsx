@@ -43,6 +43,7 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
       timestamp: new Date(),
     },
   ]);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   const [input, setInput] = useState('');
   const [provider, setProvider] = useState<AIProvider>(() => {
@@ -248,6 +249,14 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
     setIsLoading(true);
 
     try {
+      // Build conversation history for context (exclude the welcome message)
+      const conversationHistory = messages
+        .filter((m, i) => i > 0) // Skip welcome message
+        .map(m => ({
+          role: m.role,
+          content: m.code ? `${m.content}\n\nCode:\n${m.code}` : m.content,
+        }));
+
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -258,6 +267,8 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
           model,
           apiKey,
           provider,
+          conversationId,
+          messages: conversationHistory,
         }),
       });
 
@@ -267,6 +278,11 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
       }
 
       const result = await response.json();
+
+      // Store conversation ID for context continuity
+      if (result.data.conversationId && !conversationId) {
+        setConversationId(result.data.conversationId);
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),

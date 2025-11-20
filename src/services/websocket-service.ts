@@ -3,10 +3,10 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { logger } from '@/utils/logger';
 
 interface WSMessage {
-  type: 'generation_progress' | 'generation_complete' | 'generation_error' | 'deployment_progress' | 'notification';
+  type: 'generation_progress' | 'generation_complete' | 'generation_completed' | 'generation_error' | 'generation_failed' | 'deployment_progress' | 'notification' | 'agent_status_update';
   projectId?: string;
   userId?: string;
-  data: any;
+  payload: any;
 }
 
 interface ConnectedClient {
@@ -42,8 +42,8 @@ export class WebSocketService {
       // Send welcome message
       this.sendToClient(clientId, {
         type: 'notification',
-        data: {
-          message: '🚀 Connected to Ultimate App Builder - Autonomous Mode Active!',
+        payload: {
+          message: 'Connected to Ultimate App Builder - Autonomous Mode Active!',
           timestamp: new Date().toISOString(),
         },
       });
@@ -83,7 +83,8 @@ export class WebSocketService {
     this.broadcastToProject(projectId, {
       type: 'generation_progress',
       projectId,
-      data: {
+      payload: {
+        projectId,
         ...progress,
         timestamp: new Date().toISOString(),
       },
@@ -99,9 +100,11 @@ export class WebSocketService {
     downloadUrl?: string;
   }) {
     this.broadcastToProject(projectId, {
-      type: 'generation_complete',
+      type: 'generation_completed',
       projectId,
-      data: {
+      payload: {
+        projectId,
+        generationId: `gen_${projectId}`,
         ...data,
         timestamp: new Date().toISOString(),
       },
@@ -117,9 +120,12 @@ export class WebSocketService {
     agentType?: string;
   }) {
     this.broadcastToProject(projectId, {
-      type: 'generation_error',
+      type: 'generation_failed',
       projectId,
-      data: {
+      payload: {
+        projectId,
+        generationId: `gen_${projectId}`,
+        error: error.message,
         ...error,
         timestamp: new Date().toISOString(),
       },
@@ -137,7 +143,8 @@ export class WebSocketService {
     this.broadcastToProject(projectId, {
       type: 'deployment_progress',
       projectId,
-      data: {
+      payload: {
+        projectId,
         ...progress,
         timestamp: new Date().toISOString(),
       },
@@ -155,7 +162,7 @@ export class WebSocketService {
     this.broadcastToUser(userId, {
       type: 'notification',
       userId,
-      data: {
+      payload: {
         ...notification,
         timestamp: new Date().toISOString(),
       },
@@ -222,7 +229,7 @@ export class WebSocketService {
         client.projectId = message.projectId;
         this.sendToClient(clientId, {
           type: 'notification',
-          data: {
+          payload: {
             message: `Subscribed to project updates: ${message.projectId}`,
             type: 'success',
           },

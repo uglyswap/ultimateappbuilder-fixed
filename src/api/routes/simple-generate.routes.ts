@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { logger } from '@/utils/logger';
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
+import { verifyAndCleanCode } from '@/utils/code-verifier';
 
 const router = Router();
 
@@ -60,20 +61,40 @@ router.post('/', async (req: Request, res: Response) => {
 
     logger.info('Generating code from prompt with user-provided API key', { provider, model, conversationId });
 
-    // Enhanced system prompt for better code generation
-    const systemPrompt = `You are an expert full-stack developer and software architect. You specialize in building production-ready applications with modern best practices.
+    // Enhanced system prompt for professional code generation
+    const systemPrompt = `You are an elite full-stack developer and software architect. You build production-ready applications.
 
-When generating code:
-- Write clean, maintainable, and well-documented code
-- Use TypeScript with strict typing when applicable
-- Follow SOLID principles and design patterns
-- Include proper error handling and validation
-- Add helpful comments for complex logic
-- Use modern frameworks and libraries (Next.js 14, React 18, Tailwind CSS, Prisma, etc.)
-- Implement security best practices
-- Make the code production-ready
+## CRITICAL OUTPUT FORMAT:
+- Output ONLY code - no explanations, no markdown, no prose
+- For multiple files, use this format:
+  // File: path/to/file.tsx
+  <code content>
 
-Always provide COMPLETE code files - never truncate or use placeholders like "// rest of the code". If the code is long, structure it properly but include everything.`;
+  // File: path/to/another-file.ts
+  <code content>
+
+- NEVER use markdown code blocks (\`\`\`)
+- NEVER add explanations before or after code
+- NEVER use placeholders like "// rest of code" or "// ..."
+
+## CODE QUALITY:
+- Write production-ready, complete code
+- Use TypeScript with strict types
+- Include all imports and exports
+- Proper error handling
+- Modern stack: Next.js 14, React 18, TailwindCSS, Prisma, Shadcn/ui
+
+## MULTI-FILE GENERATION:
+When building apps, generate ALL necessary files:
+- React components (tsx)
+- API routes
+- Database schema (Prisma)
+- Types/interfaces
+- Utils/hooks
+- Config files
+- package.json with all dependencies
+
+Generate complete, runnable code. The user expects a full project they can immediately run.`;
 
     let generatedCode = '';
     let tokensUsed = 0;
@@ -102,7 +123,7 @@ Always provide COMPLETE code files - never truncate or use placeholders like "//
 
       const response = await anthropic.messages.create({
         model: model,
-        max_tokens: 16000, // Increased to avoid truncation
+        max_tokens: 64000, // Maximum for professional use - no truncation
         temperature: 0.7,
         system: systemPrompt,
         messages: anthropicMessages
@@ -125,7 +146,7 @@ Always provide COMPLETE code files - never truncate or use placeholders like "//
 
       const response = await openai.chat.completions.create({
         model: model,
-        max_tokens: 16000, // Increased to avoid truncation
+        max_tokens: 128000, // Maximum for professional use
         temperature: 0.7,
         messages: openaiMessages
       });
@@ -154,7 +175,7 @@ Always provide COMPLETE code files - never truncate or use placeholders like "//
 
       const response = await openai.chat.completions.create({
         model: model,
-        max_tokens: 16000, // Increased to avoid truncation
+        max_tokens: 128000, // Maximum for professional use
         temperature: 0.7,
         messages: openrouterMessages
       });
@@ -169,27 +190,42 @@ Always provide COMPLETE code files - never truncate or use placeholders like "//
       });
     }
 
-    // Store assistant response in conversation history
-    messageHistory.push({ role: 'assistant', content: generatedCode });
+    // Verify and clean the generated code
+    const verifiedCode = verifyAndCleanCode(generatedCode);
+
+    // Store assistant response in conversation history (use cleaned version)
+    messageHistory.push({ role: 'assistant', content: verifiedCode.content });
     conversationStore.set(convId, messageHistory);
 
-    logger.info('Code generated successfully', {
+    logger.info('Code generated and verified', {
       provider,
       model,
       tokensUsed,
-      contentLength: generatedCode.length,
+      contentLength: verifiedCode.content.length,
+      filesCount: verifiedCode.files.length,
+      isValid: verifiedCode.isValid,
       conversationId: convId,
       messageCount: messageHistory.length,
     });
 
+    // Log any validation errors
+    if (!verifiedCode.isValid) {
+      logger.warn('Code verification found issues', { errors: verifiedCode.errors });
+    }
+
     return res.json({
       status: 'success',
       data: {
-        code: generatedCode,
+        code: verifiedCode.content,
+        files: verifiedCode.files,
         tokensUsed,
         model,
         provider,
         conversationId: convId,
+        validation: {
+          isValid: verifiedCode.isValid,
+          errors: verifiedCode.errors,
+        },
       },
     });
   } catch (error) {

@@ -17,7 +17,8 @@
     "react-hot-toast": "^2.4.1",
     "lucide-react": "^0.356.0",
     "monaco-editor": "^0.47.0",
-    "clsx": "^2.1.0"
+    "clsx": "^2.1.0",
+    "@codesandbox/sandpack-react": "^2.13.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",

@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Sparkles, Code2, Wand2, X, Download, Github, Globe,
   Rocket, RefreshCw, Eye, Loader2, CheckCircle, AlertCircle,
-  Play, Terminal, FileCode, FolderTree, Monitor, Smartphone, Tablet
+  Play, Terminal, FileCode, FolderTree, Monitor, Smartphone, Tablet,
+  Cloud, Server, Database, ExternalLink
 } from 'lucide-react';
 import { ChatInterface } from '../components/ChatInterface';
+import { SandpackPreview } from '../components/SandpackPreview';
 import type { GeneratedFile, AgentStatus, AgentType } from '../types';
 import * as monaco from 'monaco-editor';
 
@@ -54,9 +56,12 @@ export function FromScratchPage() {
   const [githubRepo, setGithubRepo] = useState('');
   const [githubToken, setGithubToken] = useState(() => localStorage.getItem('github-token') || '');
   const [vercelToken, setVercelToken] = useState(() => localStorage.getItem('vercel-token') || '');
+  const [netlifyToken, setNetlifyToken] = useState(() => localStorage.getItem('netlify-token') || '');
+  const [railwayToken, setRailwayToken] = useState(() => localStorage.getItem('railway-token') || '');
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentStatus, setDeploymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('github');
 
   // Monaco editor ref
   const editorRef = useRef<HTMLDivElement>(null);
@@ -69,7 +74,9 @@ export function FromScratchPage() {
   useEffect(() => {
     if (githubToken) localStorage.setItem('github-token', githubToken);
     if (vercelToken) localStorage.setItem('vercel-token', vercelToken);
-  }, [githubToken, vercelToken]);
+    if (netlifyToken) localStorage.setItem('netlify-token', netlifyToken);
+    if (railwayToken) localStorage.setItem('railway-token', railwayToken);
+  }, [githubToken, vercelToken, netlifyToken, railwayToken]);
 
   // Initialize Monaco Editor
   useEffect(() => {
@@ -625,65 +632,21 @@ export function FromScratchPage() {
             {/* Preview View */}
             {viewMode === 'preview' && (
               <div className="flex-1 flex flex-col bg-gray-100">
-                {/* Preview Toolbar */}
-                <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setPreviewDevice('desktop')}
-                      className={`p-2 rounded-lg ${previewDevice === 'desktop' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}
-                    >
-                      <Monitor className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setPreviewDevice('tablet')}
-                      className={`p-2 rounded-lg ${previewDevice === 'tablet' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}
-                    >
-                      <Tablet className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setPreviewDevice('mobile')}
-                      className={`p-2 rounded-lg ${previewDevice === 'mobile' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}
-                    >
-                      <Smartphone className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={() => iframeRef.current?.contentWindow?.location.reload()}
-                    className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
-                  >
-                    <RefreshCw className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* Preview Frame */}
-                <div className="flex-1 p-6 overflow-auto flex items-center justify-center">
-                  {generatedFiles.length > 0 ? (
-                    <div
-                      className="bg-white rounded-lg shadow-2xl overflow-hidden"
-                      style={{
-                        width: deviceSizes[previewDevice].width,
-                        height: deviceSizes[previewDevice].height,
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                      }}
-                    >
-                      <iframe
-                        ref={iframeRef}
-                        src={generatePreviewHtml() || ''}
-                        className="w-full h-full border-0"
-                        title="Preview"
-                        sandbox="allow-scripts allow-same-origin"
-                      />
-                    </div>
-                  ) : (
+                {generatedFiles.length > 0 ? (
+                  <SandpackPreview
+                    files={generatedFiles}
+                    showEditor={true}
+                    showConsole={false}
+                  />
+                ) : (
+                  <div className="flex-1 flex items-center justify-center">
                     <div className="text-center text-gray-500">
                       <Eye className="w-16 h-16 mx-auto mb-4 opacity-50" />
                       <p className="text-lg">No preview available</p>
-                      <p className="text-sm mt-2">Generate code first to see the preview</p>
+                      <p className="text-sm mt-2">Generate code first to see the live preview</p>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -763,102 +726,197 @@ export function FromScratchPage() {
               <div className="flex-1 overflow-auto p-6 bg-gray-900">
                 <h3 className="text-lg font-bold text-white mb-6">Deploy Your Application</h3>
 
-                {/* GitHub Section */}
-                <div className="bg-gray-800 rounded-lg p-6 mb-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Github className="w-6 h-6 text-white" />
-                    <h4 className="text-white font-bold">Push to GitHub</h4>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-1">
-                        GitHub Token
-                      </label>
-                      <input
-                        type="password"
-                        value={githubToken}
-                        onChange={(e) => setGithubToken(e.target.value)}
-                        placeholder="ghp_xxxxxxxxxxxx"
-                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-1">
-                        Repository (owner/repo)
-                      </label>
-                      <input
-                        type="text"
-                        value={githubRepo}
-                        onChange={(e) => setGithubRepo(e.target.value)}
-                        placeholder="username/my-app"
-                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-
+                {/* Platform Selection */}
+                <div className="grid grid-cols-4 gap-3 mb-6">
+                  {[
+                    { id: 'github', name: 'GitHub', icon: Github, color: 'from-gray-600 to-gray-800' },
+                    { id: 'vercel', name: 'Vercel', icon: Globe, color: 'from-black to-gray-900' },
+                    { id: 'netlify', name: 'Netlify', icon: Cloud, color: 'from-teal-600 to-teal-800' },
+                    { id: 'railway', name: 'Railway', icon: Server, color: 'from-purple-600 to-purple-800' },
+                  ].map((platform) => (
                     <button
-                      onClick={handlePushToGitHub}
-                      disabled={isDeploying || !githubToken || !githubRepo || generatedFiles.length === 0}
-                      className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
-                        isDeploying || !githubToken || !githubRepo || generatedFiles.length === 0
-                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                          : 'bg-white text-black hover:bg-gray-200'
+                      key={platform.id}
+                      onClick={() => setSelectedPlatform(platform.id)}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        selectedPlatform === platform.id
+                          ? 'border-blue-500 bg-blue-500/20'
+                          : 'border-gray-700 hover:border-gray-600'
                       }`}
                     >
-                      {isDeploying ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <Github className="w-5 h-5" />
-                      )}
-                      Push to GitHub
+                      <platform.icon className="w-6 h-6 text-white mx-auto mb-2" />
+                      <span className="text-sm text-white font-medium">{platform.name}</span>
                     </button>
-                  </div>
+                  ))}
                 </div>
 
-                {/* Vercel Section */}
-                <div className="bg-gray-800 rounded-lg p-6 mb-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Globe className="w-6 h-6 text-white" />
-                    <h4 className="text-white font-bold">Deploy to Vercel</h4>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-1">
-                        Vercel Token
-                      </label>
-                      <input
-                        type="password"
-                        value={vercelToken}
-                        onChange={(e) => setVercelToken(e.target.value)}
-                        placeholder="Enter your Vercel token"
-                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
+                {/* GitHub Section */}
+                {selectedPlatform === 'github' && (
+                  <div className="bg-gray-800 rounded-lg p-6 mb-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Github className="w-6 h-6 text-white" />
+                      <h4 className="text-white font-bold">Push to GitHub</h4>
                     </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">GitHub Token</label>
+                        <input
+                          type="password"
+                          value={githubToken}
+                          onChange={(e) => setGithubToken(e.target.value)}
+                          placeholder="ghp_xxxxxxxxxxxx"
+                          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">Repository (owner/repo)</label>
+                        <input
+                          type="text"
+                          value={githubRepo}
+                          onChange={(e) => setGithubRepo(e.target.value)}
+                          placeholder="username/my-app"
+                          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <button
+                        onClick={handlePushToGitHub}
+                        disabled={isDeploying || !githubToken || !githubRepo || generatedFiles.length === 0}
+                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+                          isDeploying || !githubToken || !githubRepo || generatedFiles.length === 0
+                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-black hover:bg-gray-200'
+                        }`}
+                      >
+                        {isDeploying ? <Loader2 className="w-5 h-5 animate-spin" /> : <Github className="w-5 h-5" />}
+                        Push to GitHub
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-                    <button
-                      onClick={handleDeployToVercel}
-                      disabled={isDeploying || !vercelToken || generatedFiles.length === 0}
-                      className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
-                        isDeploying || !vercelToken || generatedFiles.length === 0
-                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                          : 'bg-black text-white hover:bg-gray-900 border border-white'
-                      }`}
-                    >
-                      {isDeploying ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <Rocket className="w-5 h-5" />
-                      )}
-                      Deploy to Vercel
-                    </button>
+                {/* Vercel Section */}
+                {selectedPlatform === 'vercel' && (
+                  <div className="bg-gray-800 rounded-lg p-6 mb-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Globe className="w-6 h-6 text-white" />
+                      <h4 className="text-white font-bold">Deploy to Vercel</h4>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">Vercel Token</label>
+                        <input
+                          type="password"
+                          value={vercelToken}
+                          onChange={(e) => setVercelToken(e.target.value)}
+                          placeholder="Enter your Vercel token"
+                          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <button
+                        onClick={handleDeployToVercel}
+                        disabled={isDeploying || !vercelToken || generatedFiles.length === 0}
+                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+                          isDeploying || !vercelToken || generatedFiles.length === 0
+                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                            : 'bg-black text-white hover:bg-gray-900 border border-white'
+                        }`}
+                      >
+                        {isDeploying ? <Loader2 className="w-5 h-5 animate-spin" /> : <Rocket className="w-5 h-5" />}
+                        Deploy to Vercel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Netlify Section */}
+                {selectedPlatform === 'netlify' && (
+                  <div className="bg-gray-800 rounded-lg p-6 mb-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Cloud className="w-6 h-6 text-teal-400" />
+                      <h4 className="text-white font-bold">Deploy to Netlify</h4>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">Netlify Token</label>
+                        <input
+                          type="password"
+                          value={netlifyToken}
+                          onChange={(e) => setNetlifyToken(e.target.value)}
+                          placeholder="Enter your Netlify token"
+                          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500"
+                        />
+                      </div>
+                      <button
+                        disabled={isDeploying || !netlifyToken || generatedFiles.length === 0}
+                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+                          isDeploying || !netlifyToken || generatedFiles.length === 0
+                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-teal-600 to-teal-700 text-white hover:from-teal-500 hover:to-teal-600'
+                        }`}
+                      >
+                        {isDeploying ? <Loader2 className="w-5 h-5 animate-spin" /> : <Cloud className="w-5 h-5" />}
+                        Deploy to Netlify
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Railway Section */}
+                {selectedPlatform === 'railway' && (
+                  <div className="bg-gray-800 rounded-lg p-6 mb-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Server className="w-6 h-6 text-purple-400" />
+                      <h4 className="text-white font-bold">Deploy to Railway</h4>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">Railway Token</label>
+                        <input
+                          type="password"
+                          value={railwayToken}
+                          onChange={(e) => setRailwayToken(e.target.value)}
+                          placeholder="Enter your Railway token"
+                          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <button
+                        disabled={isDeploying || !railwayToken || generatedFiles.length === 0}
+                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+                          isDeploying || !railwayToken || generatedFiles.length === 0
+                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-500 hover:to-purple-600'
+                        }`}
+                      >
+                        {isDeploying ? <Loader2 className="w-5 h-5 animate-spin" /> : <Server className="w-5 h-5" />}
+                        Deploy to Railway
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* More Platforms Info */}
+                <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                  <h4 className="text-white font-medium mb-2 flex items-center gap-2">
+                    <Database className="w-4 h-4" />
+                    More Platforms
+                  </h4>
+                  <p className="text-gray-400 text-sm mb-3">
+                    Additional deployment options available via API:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {['Render', 'Fly.io', 'AWS', 'GCP', 'Dokploy', 'Coolify'].map((platform) => (
+                      <span
+                        key={platform}
+                        className="px-3 py-1 bg-gray-700 rounded-full text-xs text-gray-300"
+                      >
+                        {platform}
+                      </span>
+                    ))}
                   </div>
                 </div>
 
                 {/* Deployment Status */}
                 {deploymentStatus !== 'idle' && (
-                  <div className={`rounded-lg p-4 ${
+                  <div className={`mt-6 rounded-lg p-4 ${
                     deploymentStatus === 'success' ? 'bg-green-900/50 border border-green-500' :
                     'bg-red-900/50 border border-red-500'
                   }`}>
@@ -879,9 +937,10 @@ export function FromScratchPage() {
                             href={deploymentUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-400 hover:underline text-sm"
+                            className="text-blue-400 hover:underline text-sm flex items-center gap-1"
                           >
                             {deploymentUrl}
+                            <ExternalLink className="w-3 h-3" />
                           </a>
                         )}
                       </div>
