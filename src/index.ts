@@ -9,9 +9,10 @@ import { logger } from '@/utils/logger';
 import apiRouter from '@/api/routes';
 import { errorHandler } from '@/api/middleware/error-handler';
 import { swaggerSpec } from '@/api/swagger';
-import { rateLimiter } from '@/api/middleware/rate-limiter';
+import { rateLimiter } from '@/api/middleware/redis-rate-limiter';
 import { websocketService } from '@/services/websocket-service';
 import { jobQueueService } from '@/services/job-queue-service';
+import { cacheService } from '@/services/cache-service';
 
 // Validate configuration on startup
 validateConfig();
@@ -95,6 +96,10 @@ async function initializeServices() {
   try {
     logger.info('🔧 Initializing services...');
 
+    // Initialize Redis cache
+    await cacheService.initialize();
+    logger.info('✅ Redis cache service initialized');
+
     // Initialize WebSocket server
     websocketService.initialize(server);
     logger.info('✅ WebSocket server initialized');
@@ -122,6 +127,10 @@ async function gracefulShutdown(signal: string) {
     // Stop job queue workers
     await jobQueueService.shutdown();
     logger.info('✅ Job queue workers stopped');
+
+    // Shutdown cache service
+    await cacheService.shutdown();
+    logger.info('✅ Cache service closed');
 
     // Close HTTP server
     server.close(() => {

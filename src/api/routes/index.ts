@@ -11,6 +11,8 @@ import deploymentRouter from './deployment.routes';
 import testingRouter from './testing.routes';
 import simpleGenerateRouter from './simple-generate.routes';
 import githubRouter from './github.routes';
+import authRouter from './auth.routes';
+import streamGenerateRouter from './stream-generate.routes';
 
 const router = Router();
 
@@ -26,7 +28,9 @@ router.use('/mobile', mobileAppGeneratorRouter);
 router.use('/deployment', deploymentRouter);
 router.use('/testing', testingRouter);
 router.use('/generate', simpleGenerateRouter);
+router.use('/generate', streamGenerateRouter);
 router.use('/github', githubRouter);
+router.use('/auth', authRouter);
 
 // API info
 router.get('/', (_req, res) => {
@@ -66,6 +70,8 @@ router.get('/', (_req, res) => {
       deployment: '/api/deployment',
       testing: '/api/testing',
       github: '/api/github',
+      auth: '/api/auth',
+      streamGenerate: '/api/generate/stream',
     },
     documentation: '/api-docs',
     websocket: 'ws://localhost:3000/ws',
