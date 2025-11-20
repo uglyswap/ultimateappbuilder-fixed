@@ -25,8 +25,8 @@ class WebSocketService {
             // Send welcome message
             this.sendToClient(clientId, {
                 type: 'notification',
-                data: {
-                    message: '🚀 Connected to Ultimate App Builder - Autonomous Mode Active!',
+                payload: {
+                    message: 'Connected to Ultimate App Builder - Autonomous Mode Active!',
                     timestamp: new Date().toISOString(),
                 },
             });
@@ -57,7 +57,8 @@ class WebSocketService {
         this.broadcastToProject(projectId, {
             type: 'generation_progress',
             projectId,
-            data: {
+            payload: {
+                projectId,
                 ...progress,
                 timestamp: new Date().toISOString(),
             },
@@ -68,9 +69,11 @@ class WebSocketService {
      */
     sendGenerationComplete(projectId, data) {
         this.broadcastToProject(projectId, {
-            type: 'generation_complete',
+            type: 'generation_completed',
             projectId,
-            data: {
+            payload: {
+                projectId,
+                generationId: `gen_${projectId}`,
                 ...data,
                 timestamp: new Date().toISOString(),
             },
@@ -81,9 +84,12 @@ class WebSocketService {
      */
     sendGenerationError(projectId, error) {
         this.broadcastToProject(projectId, {
-            type: 'generation_error',
+            type: 'generation_failed',
             projectId,
-            data: {
+            payload: {
+                projectId,
+                generationId: `gen_${projectId}`,
+                error: error.message,
                 ...error,
                 timestamp: new Date().toISOString(),
             },
@@ -96,7 +102,8 @@ class WebSocketService {
         this.broadcastToProject(projectId, {
             type: 'deployment_progress',
             projectId,
-            data: {
+            payload: {
+                projectId,
                 ...progress,
                 timestamp: new Date().toISOString(),
             },
@@ -109,7 +116,7 @@ class WebSocketService {
         this.broadcastToUser(userId, {
             type: 'notification',
             userId,
-            data: {
+            payload: {
                 ...notification,
                 timestamp: new Date().toISOString(),
             },
@@ -167,7 +174,7 @@ class WebSocketService {
                 client.projectId = message.projectId;
                 this.sendToClient(clientId, {
                     type: 'notification',
-                    data: {
+                    payload: {
                         message: `Subscribed to project updates: ${message.projectId}`,
                         type: 'success',
                     },

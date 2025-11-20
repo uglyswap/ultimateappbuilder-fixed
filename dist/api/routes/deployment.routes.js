@@ -220,6 +220,34 @@ router.get('/platforms', async (req, res) => {
                 features: ['Cloud Run', 'App Engine', 'Cloud Functions', 'Firebase'],
                 pricing: 'Free tier available',
             },
+            {
+                id: 'dokploy',
+                name: 'Dokploy',
+                description: 'Self-hosted deployment platform',
+                features: ['Docker', 'Traefik', 'SSL', 'Database Management'],
+                pricing: 'Self-hosted (free)',
+            },
+            {
+                id: 'github',
+                name: 'GitHub Pages',
+                description: 'Static site hosting from GitHub',
+                features: ['Static Sites', 'CDN', 'Custom Domains', 'Actions'],
+                pricing: 'Free',
+            },
+            {
+                id: 'fly',
+                name: 'Fly.io',
+                description: 'Run apps close to users globally',
+                features: ['Containers', 'Global Distribution', 'Machines', 'Volumes'],
+                pricing: 'Free tier available',
+            },
+            {
+                id: 'coolify',
+                name: 'Coolify',
+                description: 'Open-source Heroku/Netlify alternative',
+                features: ['Self-hosted', 'Databases', 'SSL', 'Git Integration'],
+                pricing: 'Self-hosted (free)',
+            },
         ];
         return res.json({
             success: true,

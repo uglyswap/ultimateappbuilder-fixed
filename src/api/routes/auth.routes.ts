@@ -105,15 +105,16 @@ router.post('/refresh', validateRequest({ body: refreshSchema }), async (req, re
  * Get current user
  * GET /api/auth/me
  */
-router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get('/me', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = await authService.getUserById(req.user!.userId);
 
     if (!user) {
-      return res.status(404).json({
+      res.status(404).json({
         status: 'error',
         message: 'User not found',
       });
+      return;
     }
 
     res.json({

@@ -15,6 +15,9 @@ const mobile_app_generator_routes_1 = __importDefault(require("./mobile-app-gene
 const deployment_routes_1 = __importDefault(require("./deployment.routes"));
 const testing_routes_1 = __importDefault(require("./testing.routes"));
 const simple_generate_routes_1 = __importDefault(require("./simple-generate.routes"));
+const github_routes_1 = __importDefault(require("./github.routes"));
+const auth_routes_1 = __importDefault(require("./auth.routes"));
+const stream_generate_routes_1 = __importDefault(require("./stream-generate.routes"));
 const router = (0, express_1.Router)();
 // API routes
 router.use('/projects', projects_1.default);
@@ -28,6 +31,9 @@ router.use('/mobile', mobile_app_generator_routes_1.default);
 router.use('/deployment', deployment_routes_1.default);
 router.use('/testing', testing_routes_1.default);
 router.use('/generate', simple_generate_routes_1.default);
+router.use('/generate', stream_generate_routes_1.default);
+router.use('/github', github_routes_1.default);
+router.use('/auth', auth_routes_1.default);
 // API info
 router.get('/', (_req, res) => {
     return res.json({
@@ -65,6 +71,9 @@ router.get('/', (_req, res) => {
             mobile: '/api/mobile',
             deployment: '/api/deployment',
             testing: '/api/testing',
+            github: '/api/github',
+            auth: '/api/auth',
+            streamGenerate: '/api/generate/stream',
         },
         documentation: '/api-docs',
         websocket: 'ws://localhost:3000/ws',

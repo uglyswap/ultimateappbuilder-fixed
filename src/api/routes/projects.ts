@@ -36,15 +36,16 @@ const projectController = new ProjectController();
  *       200:
  *         description: ZIP file download
  */
-router.post('/download', async (req: Request, res: Response) => {
+router.post('/download', async (req: Request, res: Response): Promise<void> => {
   try {
     const { files, projectName = 'generated-project' } = req.body;
 
     if (!files || !Array.isArray(files) || files.length === 0) {
-      return res.status(400).json({
+      res.status(400).json({
         status: 'error',
         message: 'Files array is required',
       });
+      return;
     }
 
     logger.info('Creating ZIP download', { projectName, fileCount: files.length });

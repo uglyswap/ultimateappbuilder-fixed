@@ -29,7 +29,7 @@ exports.config = {
     ai: {
         provider: (process.env.AI_PROVIDER || 'anthropic'),
         model: process.env.AI_MODEL || 'claude-3-5-sonnet-20241022',
-        maxTokens: parseInt(process.env.AI_MAX_TOKENS || '8000', 10),
+        maxTokens: parseInt(process.env.AI_MAX_TOKENS || '16000', 10), // Increased to avoid truncation
         temperature: parseFloat(process.env.AI_TEMPERATURE || '0.7'),
         apiKey: process.env.ANTHROPIC_API_KEY || '',
     },
@@ -43,11 +43,11 @@ exports.config = {
     },
     // Autonomous Mode Settings
     autonomous: {
-        enabled: process.env.AUTONOMOUS_MODE === 'true' || true, // Default ON for best UX
-        autoFix: process.env.AUTO_FIX_ERRORS === 'true' || true,
-        autoOptimize: process.env.AUTO_OPTIMIZE === 'true' || true,
-        autoTest: process.env.AUTO_TEST === 'true' || true,
-        autoDeploy: process.env.AUTO_DEPLOY === 'true' || false, // Keep deploy manual by default
+        enabled: process.env.AUTONOMOUS_MODE !== 'false', // Default ON, set to 'false' to disable
+        autoFix: process.env.AUTO_FIX_ERRORS !== 'false',
+        autoOptimize: process.env.AUTO_OPTIMIZE !== 'false',
+        autoTest: process.env.AUTO_TEST !== 'false',
+        autoDeploy: process.env.AUTO_DEPLOY === 'true', // Keep deploy manual by default
     },
     // Authentication
     auth: {

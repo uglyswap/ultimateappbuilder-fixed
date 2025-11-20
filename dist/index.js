@@ -14,9 +14,10 @@ const logger_1 = require("./utils/logger");
 const routes_1 = __importDefault(require("./api/routes"));
 const error_handler_1 = require("./api/middleware/error-handler");
 const swagger_1 = require("./api/swagger");
-const rate_limiter_1 = require("./api/middleware/rate-limiter");
+const redis_rate_limiter_1 = require("./api/middleware/redis-rate-limiter");
 const websocket_service_1 = require("./services/websocket-service");
 const job_queue_service_1 = require("./services/job-queue-service");
+const cache_service_1 = require("./services/cache-service");
 // Validate configuration on startup
 (0, config_1.validateConfig)();
 const app = (0, express_1.default)();
@@ -34,7 +35,7 @@ app.use((0, cors_1.default)({
 app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true }));
 // Rate limiting
-app.use(rate_limiter_1.rateLimiter);
+app.use(redis_rate_limiter_1.rateLimiter);
 // Request logging
 app.use((req, res, next) => {
     logger_1.logger.info(`${req.method} ${req.path}`, {
@@ -85,6 +86,9 @@ app.use(error_handler_1.errorHandler);
 async function initializeServices() {
     try {
         logger_1.logger.info('🔧 Initializing services...');
+        // Initialize Redis cache
+        await cache_service_1.cacheService.initialize();
+        logger_1.logger.info('✅ Redis cache service initialized');
         // Initialize WebSocket server
         websocket_service_1.websocketService.initialize(server);
         logger_1.logger.info('✅ WebSocket server initialized');
@@ -108,6 +112,9 @@ async function gracefulShutdown(signal) {
         // Stop job queue workers
         await job_queue_service_1.jobQueueService.shutdown();
         logger_1.logger.info('✅ Job queue workers stopped');
+        // Shutdown cache service
+        await cache_service_1.cacheService.shutdown();
+        logger_1.logger.info('✅ Cache service closed');
         // Close HTTP server
         server.close(() => {
             logger_1.logger.info('✅ HTTP server closed');

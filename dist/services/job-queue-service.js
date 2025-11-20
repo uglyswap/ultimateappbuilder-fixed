@@ -50,10 +50,25 @@ class JobQueueService {
     generationWorker;
     deploymentWorker;
     constructor() {
-        const connection = {
-            host: config_1.config.redis.url.includes('://') ? new URL(config_1.config.redis.url).hostname : 'localhost',
-            port: config_1.config.redis.url.includes('://') ? parseInt(new URL(config_1.config.redis.url).port || '6379') : 6379,
+        // Parse Redis URL properly including password support
+        const parseRedisUrl = (url) => {
+            try {
+                if (url.includes('://')) {
+                    const parsed = new URL(url);
+                    return {
+                        host: parsed.hostname || 'localhost',
+                        port: parseInt(parsed.port || '6379'),
+                        password: parsed.password || undefined,
+                        username: parsed.username || undefined,
+                    };
+                }
+            }
+            catch (e) {
+                logger_1.logger.warn('[JobQueue] Failed to parse Redis URL, using defaults');
+            }
+            return { host: 'localhost', port: 6379 };
         };
+        const connection = parseRedisUrl(config_1.config.redis.url);
         // Initialize queues
         this.generationQueue = new bullmq_1.Queue('project-generation', {
             connection,
@@ -93,10 +108,25 @@ class JobQueueService {
      * Start workers to process jobs
      */
     async startWorkers() {
-        const connection = {
-            host: config_1.config.redis.url.includes('://') ? new URL(config_1.config.redis.url).hostname : 'localhost',
-            port: config_1.config.redis.url.includes('://') ? parseInt(new URL(config_1.config.redis.url).port || '6379') : 6379,
+        // Parse Redis URL properly including password support
+        const parseRedisUrl = (url) => {
+            try {
+                if (url.includes('://')) {
+                    const parsed = new URL(url);
+                    return {
+                        host: parsed.hostname || 'localhost',
+                        port: parseInt(parsed.port || '6379'),
+                        password: parsed.password || undefined,
+                        username: parsed.username || undefined,
+                    };
+                }
+            }
+            catch (e) {
+                logger_1.logger.warn('[JobQueue] Failed to parse Redis URL, using defaults');
+            }
+            return { host: 'localhost', port: 6379 };
         };
+        const connection = parseRedisUrl(config_1.config.redis.url);
         // Generation worker
         this.generationWorker = new bullmq_1.Worker('project-generation', async (job) => {
             return await this.processGenerationJob(job);

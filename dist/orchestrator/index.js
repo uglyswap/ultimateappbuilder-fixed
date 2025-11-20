@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Orchestrator = void 0;
 const logger_1 = require("../utils/logger");
 const ai_client_1 = require("../utils/ai-client");
+const websocket_service_1 = require("../services/websocket-service");
 const backend_1 = require("../agents/backend");
 const frontend_1 = require("../agents/frontend");
 const database_1 = require("../agents/database");
@@ -76,6 +77,13 @@ class Orchestrator {
     async planProject() {
         logger_1.logger.info('📋 Phase 1: Planning project architecture');
         this.context.currentPhase = 'planning';
+        // Send WebSocket update
+        websocket_service_1.websocketService.sendGenerationProgress(this.context.projectId, {
+            step: 'Planning',
+            percentage: 15,
+            currentAgent: 'orchestrator',
+            message: 'Analyzing requirements and planning architecture...',
+        });
         const planningPrompt = `
 You are the Orchestrator agent. Plan the architecture for a ${this.context.config.template} application.
 
@@ -103,6 +111,13 @@ Return a JSON object with the plan.
     async generateDatabase() {
         logger_1.logger.info('🗄️  Phase 2: Generating database schema');
         this.context.currentPhase = 'database';
+        // Send WebSocket update
+        websocket_service_1.websocketService.sendGenerationProgress(this.context.projectId, {
+            step: 'Database',
+            percentage: 25,
+            currentAgent: 'database',
+            message: 'Generating database schema and models...',
+        });
         const agent = this.agents.get('database');
         if (!agent) {
             throw new Error('Database agent not found');
@@ -117,6 +132,13 @@ Return a JSON object with the plan.
     async generateBackend() {
         logger_1.logger.info('⚙️  Phase 3: Generating backend API');
         this.context.currentPhase = 'backend';
+        // Send WebSocket update
+        websocket_service_1.websocketService.sendGenerationProgress(this.context.projectId, {
+            step: 'Backend',
+            percentage: 40,
+            currentAgent: 'backend',
+            message: 'Generating backend API routes and services...',
+        });
         const agent = this.agents.get('backend');
         if (!agent) {
             throw new Error('Backend agent not found');
@@ -131,6 +153,13 @@ Return a JSON object with the plan.
     async generateAuth() {
         logger_1.logger.info('🔐 Phase 4: Generating authentication system');
         this.context.currentPhase = 'auth';
+        // Send WebSocket update
+        websocket_service_1.websocketService.sendGenerationProgress(this.context.projectId, {
+            step: 'Authentication',
+            percentage: 50,
+            currentAgent: 'auth',
+            message: 'Generating authentication and authorization...',
+        });
         const agent = this.agents.get('auth');
         if (!agent) {
             throw new Error('Auth agent not found');
@@ -145,6 +174,13 @@ Return a JSON object with the plan.
     async generateFrontend() {
         logger_1.logger.info('🎨 Phase 5: Generating frontend application');
         this.context.currentPhase = 'frontend';
+        // Send WebSocket update
+        websocket_service_1.websocketService.sendGenerationProgress(this.context.projectId, {
+            step: 'Frontend',
+            percentage: 60,
+            currentAgent: 'frontend',
+            message: 'Generating React components and UI...',
+        });
         const agent = this.agents.get('frontend');
         if (!agent) {
             throw new Error('Frontend agent not found');
@@ -159,6 +195,13 @@ Return a JSON object with the plan.
     async generateIntegrations() {
         logger_1.logger.info('🔌 Phase 6: Generating integrations');
         this.context.currentPhase = 'integrations';
+        // Send WebSocket update
+        websocket_service_1.websocketService.sendGenerationProgress(this.context.projectId, {
+            step: 'Integrations',
+            percentage: 70,
+            currentAgent: 'integrations',
+            message: 'Generating third-party integrations...',
+        });
         const agent = this.agents.get('integrations');
         if (!agent) {
             throw new Error('Integrations agent not found');
@@ -173,6 +216,13 @@ Return a JSON object with the plan.
     async generateDevOps() {
         logger_1.logger.info('🚢 Phase 7: Generating DevOps configuration');
         this.context.currentPhase = 'devops';
+        // Send WebSocket update
+        websocket_service_1.websocketService.sendGenerationProgress(this.context.projectId, {
+            step: 'DevOps',
+            percentage: 85,
+            currentAgent: 'devops',
+            message: 'Generating Docker, CI/CD, and deployment configs...',
+        });
         const agent = this.agents.get('devops');
         if (!agent) {
             throw new Error('DevOps agent not found');

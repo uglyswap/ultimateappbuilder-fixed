@@ -21,10 +21,10 @@ export declare const config: {
         readonly apiKey: string;
     };
     readonly autonomous: {
-        readonly enabled: true;
-        readonly autoFix: true;
-        readonly autoOptimize: true;
-        readonly autoTest: true;
+        readonly enabled: boolean;
+        readonly autoFix: boolean;
+        readonly autoOptimize: boolean;
+        readonly autoTest: boolean;
         readonly autoDeploy: boolean;
     };
     readonly auth: {

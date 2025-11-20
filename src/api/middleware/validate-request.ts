@@ -12,7 +12,7 @@ interface ValidationSchemas {
  * Middleware to validate request body, query, and params
  */
 export function validateRequest(schemas: ValidationSchemas) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (schemas.body) {
         req.body = schemas.body.parse(req.body);
@@ -39,11 +39,12 @@ export function validateRequest(schemas: ValidationSchemas) {
           errors: formattedErrors,
         });
 
-        return res.status(400).json({
+        res.status(400).json({
           status: 'error',
           message: 'Validation failed',
           errors: formattedErrors,
         });
+        return;
       }
 
       next(error);

@@ -71,14 +71,20 @@ router.post('/repo', async (req: Request, res: Response) => {
     });
 
     if (!repoResponse.ok) {
-      const error = await repoResponse.json();
+      const error = await repoResponse.json() as { message?: string };
       return res.status(repoResponse.status).json({
         status: 'error',
         message: error.message || 'Failed to fetch repository',
       });
     }
 
-    const repoData = await repoResponse.json();
+    const repoData = await repoResponse.json() as {
+      name: string;
+      description: string | null;
+      default_branch: string;
+      stargazers_count: number;
+      language: string | null;
+    };
     const targetBranch = branch || repoData.default_branch;
 
     // Get repository tree (all files)
@@ -94,7 +100,9 @@ router.post('/repo', async (req: Request, res: Response) => {
       });
     }
 
-    const treeData = await treeResponse.json();
+    const treeData = await treeResponse.json() as {
+      tree: Array<{ path: string; type: string; size?: number }>;
+    };
 
     // Filter for relevant files (code files, not too large)
     const codeExtensions = [
@@ -103,9 +111,9 @@ router.post('/repo', async (req: Request, res: Response) => {
       '.py', '.go', '.rs', '.java', '.php', '.rb', '.vue', '.svelte'
     ];
 
-    const relevantFiles = treeData.tree.filter((item: any) => {
+    const relevantFiles = treeData.tree.filter((item) => {
       if (item.type !== 'blob') return false;
-      if (item.size > 100000) return false; // Skip files > 100KB
+      if (item.size && item.size > 100000) return false; // Skip files > 100KB
 
       // Skip common non-code directories
       if (item.path.includes('node_modules/')) return false;
@@ -134,7 +142,7 @@ router.post('/repo', async (req: Request, res: Response) => {
         );
 
         if (contentResponse.ok) {
-          const contentData = await contentResponse.json();
+          const contentData = await contentResponse.json() as { content?: string };
           if (contentData.content) {
             const content = Buffer.from(contentData.content, 'base64').toString('utf-8');
             files.push({
@@ -228,7 +236,11 @@ router.post('/file', async (req: Request, res: Response) => {
       });
     }
 
-    const contentData = await contentResponse.json();
+    const contentData = await contentResponse.json() as {
+      content: string;
+      size: number;
+      sha: string;
+    };
     const content = Buffer.from(contentData.content, 'base64').toString('utf-8');
 
     return res.json({
