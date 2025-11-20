@@ -1,4 +1,4 @@
-Force rebuild at 2025-11-19 13:30:00
+Force rebuild at 2025-11-20 - app19
 This file forces Dokploy to detect a code change and pull fresh from GitHub.
-Commit hash: 06ea07d
-Pre-built bundle: index-CMMDCXpn.js
+Commit hash: 282315d
+Features: JWT Auth, Redis Cache, Rate Limiting, Streaming
