@@ -12,10 +12,12 @@ type MessageHandler = (payload: unknown) => void;
 class WebSocketService {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
+  private maxReconnectAttempts = 10;
   private reconnectDelay = 1000;
   private handlers: Map<WebSocketMessageType, Set<MessageHandler>> = new Map();
   private url: string;
+  private isIntentionallyClosed = false;
+  private pingInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -23,16 +25,22 @@ class WebSocketService {
     this.url = `${wsHost}/ws`;
   }
 
+  isConnected(): boolean {
+    return this.ws?.readyState === WebSocket.OPEN;
+  }
+
   connect(): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
       return;
     }
 
+    this.isIntentionallyClosed = false;
+
     try {
       this.ws = new WebSocket(this.url);
 
       this.ws.onopen = () => {
-        console.log('✅ WebSocket connected');
+        console.log('WebSocket connected');
         this.reconnectAttempts = 0;
 
         // Send authentication token
@@ -40,6 +48,9 @@ class WebSocketService {
         if (token) {
           this.send('auth', { token });
         }
+
+        // Start ping interval to keep connection alive
+        this.startPingInterval();
       };
 
       this.ws.onmessage = (event) => {
@@ -66,21 +77,45 @@ class WebSocketService {
   }
 
   disconnect(): void {
+    this.isIntentionallyClosed = true;
+    this.stopPingInterval();
+
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
     this.handlers.clear();
+    this.reconnectAttempts = 0;
+  }
+
+  private startPingInterval(): void {
+    this.stopPingInterval();
+    this.pingInterval = setInterval(() => {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.send('ping', { timestamp: Date.now() });
+      }
+    }, 30000); // Ping every 30 seconds
+  }
+
+  private stopPingInterval(): void {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
   }
 
   private attemptReconnect(): void {
+    if (this.isIntentionallyClosed) {
+      return;
+    }
+
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.error('Max reconnection attempts reached');
       return;
     }
 
     this.reconnectAttempts++;
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+    const delay = Math.min(this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1), 30000);
 
     console.log(`Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
 

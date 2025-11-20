@@ -1,11 +1,24 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean>;
+  timeout?: number;
+}
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public errors?: Array<{ field: string; message: string }>
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
 }
 
 class ApiClient {
   private baseUrl: string;
+  private defaultTimeout = 30000; // 30 seconds default
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
@@ -15,7 +28,7 @@ class ApiClient {
     endpoint: string,
     options: RequestOptions = {}
   ): Promise<T> {
-    const { params, ...fetchOptions } = options;
+    const { params, timeout = this.defaultTimeout, ...fetchOptions } = options;
 
     // Build URL with query params
     let url = `${this.baseUrl}${endpoint}`;
@@ -39,24 +52,57 @@ class ApiClient {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, {
-      ...fetchOptions,
-      headers,
-    });
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({
-        message: response.statusText,
-      }));
-      throw new Error(error.message || 'Request failed');
+    try {
+      const response = await fetch(url, {
+        ...fetchOptions,
+        headers,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({
+          message: response.statusText,
+        }));
+
+        throw new ApiError(
+          errorData.message || 'Request failed',
+          response.status,
+          errorData.errors
+        );
+      }
+
+      // Handle 204 No Content
+      if (response.status === 204) {
+        return {} as T;
+      }
+
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+
+      if (error instanceof ApiError) {
+        throw error;
+      }
+
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError('Request timeout - please try again', 408);
+        }
+
+        // Network errors
+        if (error.message === 'Failed to fetch') {
+          throw new ApiError('Network error - please check your connection', 0);
+        }
+      }
+
+      throw new ApiError('An unexpected error occurred', 500);
     }
-
-    // Handle 204 No Content
-    if (response.status === 204) {
-      return {} as T;
-    }
-
-    return response.json();
   }
 
   async get<T>(endpoint: string, params?: Record<string, string | number | boolean>): Promise<T> {

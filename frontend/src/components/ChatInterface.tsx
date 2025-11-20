@@ -257,6 +257,10 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
           content: m.code ? `${m.content}\n\nCode:\n${m.code}` : m.content,
         }));
 
+      // Create abort controller for timeout (5 minutes for code generation)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 300000);
+
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -270,10 +274,13 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
           conversationId,
           messages: conversationHistory,
         }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
@@ -298,10 +305,22 @@ export function ChatInterface({ projectId, onCodeGenerated }: ChatInterfaceProps
         onCodeGenerated(assistantMessage.code);
       }
     } catch (error) {
+      let errorText = 'Unknown error occurred';
+
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorText = 'Request timed out. The AI is taking too long to respond. Please try a simpler prompt or check if the API is working.';
+        } else if (error.message.includes('Failed to fetch')) {
+          errorText = 'Network error. Please check your internet connection and make sure the backend server is running.';
+        } else {
+          errorText = error.message;
+        }
+      }
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your API key and make sure the backend is running.`,
+        content: `Sorry, I encountered an error: ${errorText}`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);

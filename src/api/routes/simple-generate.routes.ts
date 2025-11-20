@@ -3,6 +3,7 @@ import { logger } from '@/utils/logger';
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 import { verifyAndCleanCode } from '@/utils/code-verifier';
+import { validateRequest, commonSchemas } from '@/api/middleware/validate-request';
 
 const router = Router();
 
@@ -27,7 +28,7 @@ setInterval(() => {
  * POST /api/generate
  * Body: { prompt: string, model: string, apiKey: string, provider: AIProvider, conversationId?: string }
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', validateRequest({ body: commonSchemas.generateCode }), async (req: Request, res: Response) => {
   try {
     const { prompt, model, apiKey, provider, conversationId, messages: clientMessages } = req.body;
 

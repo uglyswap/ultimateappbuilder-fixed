@@ -45,11 +45,11 @@ export const config = {
 
   // Autonomous Mode Settings
   autonomous: {
-    enabled: process.env.AUTONOMOUS_MODE === 'true' || true, // Default ON for best UX
-    autoFix: process.env.AUTO_FIX_ERRORS === 'true' || true,
-    autoOptimize: process.env.AUTO_OPTIMIZE === 'true' || true,
-    autoTest: process.env.AUTO_TEST === 'true' || true,
-    autoDeploy: process.env.AUTO_DEPLOY === 'true' || false, // Keep deploy manual by default
+    enabled: process.env.AUTONOMOUS_MODE !== 'false', // Default ON, set to 'false' to disable
+    autoFix: process.env.AUTO_FIX_ERRORS !== 'false',
+    autoOptimize: process.env.AUTO_OPTIMIZE !== 'false',
+    autoTest: process.env.AUTO_TEST !== 'false',
+    autoDeploy: process.env.AUTO_DEPLOY === 'true', // Keep deploy manual by default
   },
 
   // Authentication
